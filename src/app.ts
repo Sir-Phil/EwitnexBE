@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { errorHandler } from "./middleware/errorMiddleware";
+import { errorHandler, notFound } from "./middleware/errorMiddleware";
 
 import usersRoute from "./routes/usersRoute"
 
@@ -25,6 +25,7 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 app.use("/api/users", usersRoute );
 
 //for ErrorHandling
-app.use(errorHandler)
+app.use(errorHandler);
+app.use(notFound);
 
 export default app

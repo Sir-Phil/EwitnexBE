@@ -4,7 +4,7 @@ import { Category} from "./eventCategories";
 import { Gender } from "./genderOption";
 
 export interface IUserRequest extends Request {
-    user: any
+    user?: any;
 }
 
 export interface IUser extends mongoose.Document {

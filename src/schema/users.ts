@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [false, "Please enter your password"],
-        
+        select: true
     },
 
     phoneNumber: {
@@ -106,7 +106,7 @@ userSchema.methods.getJwtToken = function() {
 };
 
 //compare password
-userSchema.methods.comparePassword = async function(enteredPassword: string){
+userSchema.methods.comparePassword = async function(enteredPassword: string): Promise<boolean>{
     const user = this as IUser
     return await bcrypt.compareSync(enteredPassword, user.password);
 }

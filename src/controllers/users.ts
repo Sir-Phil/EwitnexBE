@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
+import {Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
 import User from '../schema/users';
 import { searchCityLocation } from '../utils/searchCity';
 import generateSuggestedUsername from '../utils/generateusername';
 import Gender from '../interface/genderOption';
 import sendToken from '../utils/jwtToken';
+import { IUserRequest } from '../interface/users';
 
 // Controller to create a new user step by step
-const createUserStep1 = asyncHandler (async (req: Request, res: Response, _next: NextFunction) => {
+const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
     const { firstName, lastName } = req.body;
 
@@ -37,7 +37,7 @@ const createUserStep1 = asyncHandler (async (req: Request, res: Response, _next:
   }
 });
 
-const confirmEmailStep2 = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
+const confirmEmailStep2 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
     try {
       const userId = req.params.userId;
       const { email } = req.body;
@@ -60,7 +60,7 @@ const confirmEmailStep2 = asyncHandler (async (req: Request, res: Response, next
       res.status(200).json({
         success: true,
         data: {
-          message: 'Step 2 completed. Proceed to the next step.',
+          message: `Using ${user!.email} Sign Up. Proceed to the next step.`,
           user,
         },
       });
@@ -74,64 +74,61 @@ const confirmEmailStep2 = asyncHandler (async (req: Request, res: Response, next
 });
   
   
-const continueSignupStep3 = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { phoneNumber, password, confirmPassword } = req.body;
-      const userId = req.params.userId;
-  
-      // Find the user by ID
-      const user = await User.findById(userId);
-      if (!user) {
-         res.status(404).json({
-          success: false,
-          error: 'User not found',
-        });
-      }
-  
-      // Validate phoneNumber
-      if (!phoneNumber) {
-         res.status(400).json({
-          success: false,
-          error: 'Phone number is required',
-        });
-      }
-  
-      // Validate password
-      if (password !== confirmPassword) {
-         res.status(400).json({
-          success: false,
-          error: 'Passwords do not match',
-        });
-      }
-  
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Update user information
-      if(user){
-        user.phoneNumber = phoneNumber;
-        user.password = hashedPassword;
-    
-        await user.save();
-      }
-  
-      res.status(200).json({
-        success: true,
-        data: {
-          message: 'Step 3 completed. Proceed to the next step.',
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
+const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+  try {
+    const { phoneNumber, password, confirmPassword } = req.body;
+    const userId = req.params.userId;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+       res.status(404).json({
         success: false,
-        error: 'Error step 3',
+        error: 'User not found',
       });
     }
+
+    // Validate phoneNumber
+    if (!phoneNumber) {
+       res.status(400).json({
+        success: false,
+        error: 'Phone number is required',
+      });
+    }
+
+    // Validate password
+    if (password !== confirmPassword) {
+       res.status(400).json({
+        success: false,
+        error: 'Passwords do not match',
+      });
+    }
+    // Update user information
+    if(user){
+      user.phoneNumber = phoneNumber;
+      user.password = password;
+
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Step 3 completed. Proceed to the next step.',
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'Error step 3',
+    });
+  }
 });
-  
+
+
 // Controller for Step 3: Choose Gender
-const chooseGenderStep4 = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
+const chooseGenderStep4 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
     try {
       const { gender } = req.body;
       const userId = req.params.userId;
@@ -178,7 +175,7 @@ const chooseGenderStep4 = asyncHandler (async (req: Request, res: Response, next
   
 
 // Controller for Step 5: Provide City Location
-const provideCityLocationStep5 = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+const provideCityLocationStep5 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
     const { city } = req.body;
     const userId = req.params.userId;
@@ -228,7 +225,7 @@ const provideCityLocationStep5 = asyncHandler(async (req: Request, res: Response
 
 
 
-const provideUsernameStep6 = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+const provideUsernameStep6 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
     const { username } = req.body;
     const userId = req.params.userId;
@@ -289,7 +286,7 @@ const provideUsernameStep6 = asyncHandler(async (req: Request, res: Response, ne
 });
 
 
-const selectEventTypesStep7 = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+const selectEventTypesStep7 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
     try {
       const { eventTypes } = req.body;
       const userId = req.params.userId;
@@ -329,27 +326,46 @@ const selectEventTypesStep7 = asyncHandler(async (req: Request, res: Response, n
         error: 'Error in Step 7',
       });
     }
-  });
-  
+});
 
-  
-  
+// @Desc Get log-in user
+// @Route /api/users/login-user
+// @Method GET
 
-
-const loginUser = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
+const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
     try {
-      const { email, password } = req.body;
+      const { identifier, password } = req.body;
   
-      const user = await User.findOne({ email });
+      // Find the user by either email, username, or phoneNumber
+      const user = await User.findOne({
+        $or: [
+          { email: identifier },
+          { username: identifier },
+          { phoneNumber: isNaN(identifier) ? undefined : identifier },
+        ],
+      }).select("+password"); 
   
-      if (!user || !(await user.comparePassword(password))) {
+      if (!user) {
+        console.log('User not found');
         res.status(401).json({
           success: false,
-          error: 'Invalid email or password',
+          error: 'Invalid email, username, or password',
         });
       }
   
-      sendToken(user, 201, res)
+      console.log('Stored Hashed Password:', user?.password);
+      const isPasswordMatch = await user?.comparePassword(password);
+  
+      if (!isPasswordMatch) {
+        console.log('Authentication Failed');
+        res.status(401).json({
+          success: false,
+          error: 'Invalid email, username, or password',
+        });
+      }
+  
+      // Password match, send the token
+      sendToken(user, 201, res);
     } catch (error) {
       console.error(error);
       res.status(500).json({
@@ -357,7 +373,202 @@ const loginUser = asyncHandler (async (req: Request, res: Response, next: NextFu
         error: 'Error logging in',
       });
     }
+});
+
+
+// @Desc Get Load log-in user
+// @Route /api/users/load-user
+// @Method GET
+
+const getLoggedInUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+  try {
+    console.log("User ID:", req.user.id);
+      const user = await User.findById(req.user.id);
+     
+      if (!user) {
+          res.status(400).json({
+              success: false,
+              error: "User does not exist",
+          });
+      }
+      
+      res.status(200).json({
+          success: true,
+          user,
+      });
+  } catch (error: any) {
+    //console.error("Error fetching user data:", error.message);
+      res.status(500).json({
+          success: false,
+          error: "Error fetching user data",
+      });
+  }
+});
+
+// @Desc Log out user
+// @Route /api/users/logout
+// @Method GET
+
+const logOutUser = asyncHandler (async ( _req: Request, res: Response, _next: NextFunction) => {
+  try {
+    res.cookie("token", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+    });
+    res.status(201).json({
+        success: true,
+        message: "Log out successfully",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || "Internal Server Error"
   });
+  }
+});
+
+
+// @Desc Update profile
+// @Route /api/users/update
+// @Method PUT
+const updateUserInfo = asyncHandler(async(req: Request, res: Response, _next: NextFunction) => {
+  try {
+      const {email, password, phoneNumber, firstName, lastName} = req.body;
+  
+      const user = await User.findOne({email}).select("+password");
+  
+      if(!user){
+        res.status(400).json({
+          success: false,
+          error: "User not found",
+      });
+      return;
+      }
+  
+      const isPasswordValid = await user.comparePassword(password);
+  
+      if(!isPasswordValid){
+        res.status(400).json({
+          success: false,
+          error: "please provide the correct information",
+      });
+      return;
+      }
+  
+      user.firstName = firstName;
+      user.email = email;
+      user.phoneNumber = phoneNumber;
+      user.lastName = lastName;
+  
+      await user.save();
+  
+      res.status(201).json({
+          success: true,
+          user,
+      })
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || "Internal Server Error"    
+  });
+  }
+})
+
+// @Desc Update User password
+// @Route /api/users/update-user-password
+// @Method Put
+
+const UpdateUserPassword = asyncHandler (async(req: IUserRequest, res: Response, _next: NextFunction) => {
+  try {
+      const user = await User.findById(req.user.id).select("+password");
+
+      const isPasswordMatched = await user?.comparePassword(
+          req.body.oldPassword
+      );
+  
+      if(!isPasswordMatched){
+        res.status(400).json({
+          success: false,
+          error: "Old password is incorrect!",
+      });
+      
+      }
+  
+      if(req.body.newPassword !== req.body.confirmPassword){
+        res.status(400).json({
+          success: false,
+          error: "Password doesn't match with each other!",
+      });
+        
+      }
+      user!.password = req.body.newPassword;
+  
+      await user?.save();
+  
+      res.status(200).json({
+          success: true,
+          message: "Password updated successfully!"
+      });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || "Internal Server Error"    
+  });
+  }
+});
+
+
+// @Desc find User information with the userId
+// @Route /api/users/user-info/:id
+// @Method GET
+//@Access Admin
+
+const getUserDetails = asyncHandler(async(req: Request, res: Response, _next: NextFunction) => {
+  try {
+      const user = await User.findById(req.params.id)
+
+      res.status(201).json({
+      success: true,
+      user,
+  });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || "Internal Server Error"    
+  });
+  }
+})
+
+// @Desc delete User for ---- 
+// @Route /api/users/delete-users/:id
+// @Method DELETE
+//@access Admin
+const deleteUser = asyncHandler(async(req:Request, res:Response, next: NextFunction) => {
+  try {
+      const user = await User.findById(req.params.id);
+
+      if(!user){
+        res.status(400).json({
+          success: false,
+          error: "User is not available with this Id",
+      });
+      }
+  
+      await User.findByIdAndDelete(req.params.id);
+  
+      res.status(201).json({
+          success: true,
+          message: "User deleted successfully!",
+      });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || "Internal Server Error"    
+  });
+  }
+})
+
+
   
 
 export {
@@ -368,6 +579,11 @@ export {
   provideUsernameStep6,
   provideCityLocationStep5,
   selectEventTypesStep7,
-  
-  
+  loginUser,
+  getLoggedInUser,
+  logOutUser,
+  updateUserInfo,
+  UpdateUserPassword,
+  getUserDetails,
+  deleteUser
 };
