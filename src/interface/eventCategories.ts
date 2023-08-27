@@ -8,6 +8,9 @@ export const Category = [
     'business',
     'vacation',
     'sport',
-    'christianity'
+    'christianity',
+    'Sports and Fitness',
+    'Conference',
+    'Music'
     //More language type can be added 
 ] as const

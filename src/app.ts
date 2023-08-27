@@ -1,9 +1,12 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+
 import { errorHandler, notFound } from "./middleware/errorMiddleware";
 
-import usersRoute from "./routes/usersRoute"
+import usersRoute from "./routes/usersRoute";
+import eventRoute from "./routes/eventRoute";
 
 const app = express();
 
@@ -14,6 +17,8 @@ app.use("/test", (_req, res) => {
   res.send("Hi Ewitnex")
 })
 
+app.use(bodyParser.urlencoded({extended: true, limit: "50mb"}));
+
 // config
 if (process.env.NODE_ENV !== "PRODUCTION") {
     require("dotenv").config({
@@ -23,6 +28,7 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 
 //endpoints routes
 app.use("/api/users", usersRoute );
+app.use("/api/events", eventRoute);
 
 //for ErrorHandling
 app.use(errorHandler);
