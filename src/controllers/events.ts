@@ -95,60 +95,11 @@ const eventLocation = asyncHandler(async (req: Request, res: Response, next: Nex
         next(error);
     }
 });
-
-// const eventPerformerInfo = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
-//     try {
-//         const performerData = req.body.performer;
-
-//         if (!performerData) {
-//              res.status(400).json({
-//                 success: false,
-//                 message: "Performing artist data is missing in the request body",
-//             });
-//         }
-
-//         const performer = JSON.parse(performerData);
-
-//         if (!performer || typeof performer !== 'object') {
-//              res.status(400).json({
-//                 success: false,
-//                 message: "Invalid performing artist data",
-//             });
-//         }
-
-//         const eventId = req.params.eventId;
-
-//         if (req.file) {
-//             performer.performerImage = req.file.path;
-//         }
-
-//         const updateEventInfo = await Event.findByIdAndUpdate(
-//             eventId,
-//             { performer },
-//             { new: true }
-//         );
-
-//         res.status(200).json({
-//             success: true,
-//             message: "Event Performer updated successfully",
-//             data: updateEventInfo,
-//         })
-//     } catch (error) {
-//         next(error);
-//     }
-// });
-
+    
 
 const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const performerData = req.body.performer;
-
-        // if (!performerData || !Array.isArray(performerData)) {
-        //      res.status(400).json({
-        //         success: false,
-        //         message: "Performing artist data is missing or not in the correct format in the request body",
-        //     });
-        // }
 
         const performers: Array<any> = JSON.parse(performerData); // Annotate the type as Array<any>
 
@@ -247,6 +198,207 @@ const getAllEventsByTypes = asyncHandler(async(req: Request, res: Response, next
     
 })
 
+const getEventDetails = asyncHandler (async(req: Request, res: Response, next: NextFunction) => {
+try {
+    const eventId = req.params.eventId;
+
+    const event = await Event.findById(eventId);
+
+    if(!event) {
+        res.status(404).json({
+            success: false,
+            message: "Event not found",
+        });
+
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Event retrieved successfully",
+        data: event
+    });
+} catch (error) {
+    next(error);
+}
+});
+
+const updateEvents = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId; // Assuming you're passing the event ID as a parameter
+        const updateData = req.body; // Assuming you're sending the updated data in the request body
+
+        const updatedEvent = await Event.findByIdAndUpdate(
+            eventId,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedEvent) {
+            res.status(404).json({
+                success: false,
+                message: "Event not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Event updated successfully",
+            data: updatedEvent,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+const deleteEvent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId; // Assuming you're passing the event ID as a parameter
+
+        const deletedEvent = await Event.findByIdAndDelete(eventId);
+
+        if (!deletedEvent) {
+            res.status(404).json({
+                success: false,
+                message: "Event not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Event deleted successfully",
+            data: deletedEvent,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+const updatePerformerImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId;
+        const performerIndex = req.params.performerIndex; // Assuming you're passing the performer index as a parameter
+
+        if (req.file) {
+            const newImage = req.file.path;
+
+            const updateEventInfo = await Event.findOneAndUpdate(
+                { _id: eventId, 'performer._id': performerIndex },
+                { $set: { 'performer.$.performerImage': newImage } },
+                { new: true }
+            );
+
+            if (!updateEventInfo) {
+                res.status(404).json({
+                    success: false,
+                    message: "Event or performer not found",
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: "Performer image updated successfully",
+                data: updateEventInfo,
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: "No performerImage file provided",
+            });
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+
+const deletePerformer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId;
+        const performerId = req.params.performerId; // Assuming you're passing the performer's _id as a parameter
+
+        const updateEventInfo = await Event.findByIdAndUpdate(
+            eventId,
+            { $pull: { performer: { _id: performerId } } }, // Remove the performer with the specified _id
+            { new: true }
+        );
+
+        if (!updateEventInfo) {
+            res.status(404).json({
+                success: false,
+                message: "Event not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Performer deleted successfully",
+            data: updateEventInfo,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+const updateTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId;
+        const ticketId = req.params.ticketId; // Assuming you're passing the ticket's _id as a parameter
+        const { ticket } = req.body;
+
+        const updateEventInfo = await Event.findOneAndUpdate(
+            { _id: eventId, 'ticket._id': ticketId }, // Find the event with the given ID and matching ticket _id
+            { $set: { 'ticket.$': ticket } }, // Update the matched ticket with the new ticket data
+            { new: true }
+        );
+
+        if (!updateEventInfo) {
+            res.status(404).json({
+                success: false,
+                message: "Event or ticket not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Ticket updated successfully",
+            data: updateEventInfo,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+const deleteTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const eventId = req.params.eventId;
+        const ticketId = req.params.ticketId; // Assuming you're passing the ticket's _id as a parameter
+
+        const updateEventInfo = await Event.findByIdAndUpdate(
+            eventId,
+            { $pull: { ticket: { _id: ticketId } } }, // Remove the ticket with the specified _id
+            { new: true }
+        );
+
+        if (!updateEventInfo) {
+            res.status(404).json({
+                success: false,
+                message: "Event not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Ticket deleted successfully",
+            data: updateEventInfo,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 
 
 export {
@@ -256,4 +408,11 @@ export {
     eventPerformerInfo,
     eventTicket,
     getAllEventsByTypes,
+    getEventDetails,
+    updateEvents,
+    deleteEvent,
+    updatePerformerImage,
+    deletePerformer,
+    updateTicket,
+    deleteTicket
 }
