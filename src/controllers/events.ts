@@ -2,7 +2,6 @@ import asyncHandler from "express-async-handler";
 import Event from "../schema/event";
 import { IUserRequest } from "../interface/users";
 import { NextFunction, Request, Response } from "express";
-import { v4 as uuidv4 } from 'uuid';
 import User from "../schema/users";
 
 
@@ -216,19 +215,16 @@ const eventTicket = asyncHandler (async (req: Request, res: Response, next: Next
         const {ticket} = req.body;
         const eventId = req.params.eventId;
 
-        const uniqueID = uuidv4();
-
         
         const updateEventInfo = await Event.findByIdAndUpdate(
             eventId,
-            { $set: {uniqueID, ticket } },
+            { $set: {ticket } },
             { new: true }
           );
         
         res.status(200).json({
             success: true,
             message: "Event ticket updated successfully",
-            uniqueID: uniqueID,
             data: updateEventInfo
         });
     } catch (error) {
