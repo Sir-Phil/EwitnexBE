@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const users_1 = require("../controllers/users");
+const auth_1 = require("../middleware/auth");
+const router = express_1.default.Router();
+router.post("/create", users_1.createUserStep1);
+router.post("/s2/:userId", users_1.confirmEmailStep2);
+router.post("/s3/:userId", users_1.continueSignupStep3);
+router.post("/s4/:userId", users_1.chooseGenderStep4);
+router.post("/s5/:userId", users_1.provideCityLocationStep5);
+router.post("/s6/:userId", users_1.provideUsernameStep6);
+router.post("/s7/:userId", users_1.selectEventTypesStep7);
+router.post("/login", users_1.loginUser);
+router.get("/load-user", auth_1.isAuthenticated, users_1.getLoggedInUser);
+router.get("/logout", users_1.logOutUser);
+router.get("/user-details/:id", users_1.getUserDetails);
+router.put("/update-user", auth_1.isAuthenticated, users_1.updateUserInfo);
+router.put("/update-user-password", auth_1.isAuthenticated, users_1.UpdateUserPassword);
+router.delete("/delete-user/:id", users_1.deleteUser);
+exports.default = router;

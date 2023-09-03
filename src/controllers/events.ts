@@ -3,30 +3,102 @@ import Event from "../schema/event";
 import { IUserRequest } from "../interface/users";
 import { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from 'uuid';
+import User from "../schema/users";
 
 
+// const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
+//     const {
+//         EventTitle,
+//         eventType,
+//         category,
+//         isPublic,
+//         isPrivate,
+//         description,
+//         organizerUserId, // The ID of the user to be set as an organizer
+//     } = req.body;
 
-const createEventInfo = asyncHandler(async (req:IUserRequest, res: Response, next: NextFunction) => {
+//     try {
+//         // Verify if the logged-in user exists
+//         const loggedInUser = await User.findById(req.user._id);
+
+//         if (!loggedInUser) {
+//             res.status(404).json({
+//                 success: false,
+//                 message: "User not found",
+//             });
+//         }
+
+//         // Check if the logged-in user has organizer privileges
+//         if (!loggedInUser?.isEventOrganizer) {
+//             res.status(403).json({
+//                 success: false,
+//                 message: "You don't have organizer privileges",
+//             });
+//         }
+
+//         // Verify if the user to be set as an organizer exists
+//         const userToSetAsOrganizer = await User.findById(organizerUserId);
+
+//         if (!userToSetAsOrganizer) {
+//             res.status(404).json({
+//                 success: false,
+//                 message: "User to set as an organizer not found",
+//             });
+//         }
+
+//         // Create the event and associate it with the specified user
+//         const createEventInfo = await Event.create({
+//             EventTitle,
+//             eventType,
+//             OrganizedBy: organizerUserId, // Associate the event with the specified user
+//             category,
+//             isPublic,
+//             isPrivate,
+//             description,
+//         });
+
+//         res.status(201).json({
+//             success: true,
+//             message: "Event Information created successfully",
+//             data: createEventInfo,
+//             eventId: createEventInfo._id,
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// });
+
+const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
     const {
         EventTitle,
         eventType,
         category,
-        OrganizedBy,
         isPublic,
         isPrivate,
         description,
     } = req.body;
 
     try {
+        // Create the event and associate it with the logged-in user
         const createEventInfo = await Event.create({
             EventTitle,
             eventType,
-            OrganizedBy,
+            OrganizedBy: req.user._id, // Associate the event with the logged-in user
             category,
             isPublic,
             isPrivate,
             description
         });
+
+        // Verify if the user exists
+        const user = await User.findOne({ _id: req.user._id }); // Use req.user._id directly
+
+        if (!user) {
+             res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -37,7 +109,8 @@ const createEventInfo = asyncHandler(async (req:IUserRequest, res: Response, nex
     } catch (error) {
         next(error);
     }
-})
+});
+
 
 
 const eventProgramCover = async (req: Request, res: Response, next: NextFunction) => {

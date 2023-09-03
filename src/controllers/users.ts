@@ -37,42 +37,51 @@ const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _
   }
 });
 
-const confirmEmailStep2 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
-    try {
-      const userId = req.params.userId;
-      const { email } = req.body;
-  
-      const user = await User.findById(userId);
-      if (!user) {
-        res.status(404).json({
-          success: false,
-          error: 'User not found',
-        });
-      }
-  
-      // Update user's email
-      if(user){
-        user.email = email;
-        await user.save();
-      }
-     
-  
-      res.status(200).json({
-        success: true,
-        data: {
-          message: `Using ${user!.email} Sign Up. Proceed to the next step.`,
-          user,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
+const confirmEmailStep2 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+  try {
+    const userId = req.params.userId;
+    const { email } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
         success: false,
-        error: 'Error confirming email',
+        error: 'User not found',
       });
     }
+
+    // Check if the provided email already exists in the database
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      res.status(400).json({
+        success: false,
+        error: 'Email already exists',
+      });
+    }
+
+    // Update user's email
+    if(user){
+      user.email = email;
+      await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: `Using ${user.email} Sign Up. Proceed to the next step.`,
+        user,
+      },
+    });
+    }
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'Error confirming email',
+    });
+  }
 });
-  
+
   
 const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
@@ -82,7 +91,7 @@ const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response
     // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
-       res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found',
       });
@@ -90,21 +99,31 @@ const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response
 
     // Validate phoneNumber
     if (!phoneNumber) {
-       res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Phone number is required',
       });
     }
 
+    // Check if the phoneNumber already exists for another user
+    const existingUserWithPhoneNumber = await User.findOne({ phoneNumber });
+    if (existingUserWithPhoneNumber && existingUserWithPhoneNumber._id.toString() !== userId) {
+      res.status(400).json({
+        success: false,
+        error: 'Phone number is already in use by another user',
+      });
+    }
+
     // Validate password
     if (password !== confirmPassword) {
-       res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Passwords do not match',
       });
     }
+
     // Update user information
-    if(user){
+    if (user) {
       user.phoneNumber = phoneNumber;
       user.password = password;
 
@@ -241,34 +260,31 @@ const provideUsernameStep6 = asyncHandler(async (req: IUserRequest, res: Respons
 
     // Validate and update user username
     if (!username) {
-      res.status(400).json({
-        success: false,
-        error: 'Username is required',
-      });
+      const existingUserWithUsername = await User.findOne({ username });
+      if (existingUserWithUsername) {
+        res.status(409).json({
+          success: false,
+          error: 'Username is already in use',
+        });
+      }
+
+      // If username is not provided, suggest a new username based on first name and last name
+      const suggestedUsername = generateSuggestedUsername(user!.firstName, user!.lastName);
+      user!.username = suggestedUsername;
+    } else {
+      // If username is provided, check if it's already in use
+      const existingUserWithUsername = await User.findOne({ username });
+      if (existingUserWithUsername) {
+       res.status(409).json({
+          success: false,
+          error: 'Username is already in use',
+        });
+      }
+
+      user!.username = username;
     }
 
-    // Check if the provided username is already taken
-    const existingUserWithUsername = await User.findOne({ username });
-    if (existingUserWithUsername) {
-      res.status(409).json({
-        success: false,
-        error: 'Username is already in use',
-      });
-    }
-
-    // If username is not provided, suggest a new username based on first name and last name
-    if(user){
-        if (!username) {
-            const suggestedUsername = generateSuggestedUsername(user.firstName, user.lastName);
-            user.username = suggestedUsername;
-          } else {
-            user.username = username;
-          }
-      
-          await user.save();
-    }
-    
-
+    await user!.save();
     res.status(200).json({
       success: true,
       data: {
