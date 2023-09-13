@@ -411,12 +411,26 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       phoneNumber,
       password,
       gender,
-      city,
       username,
       //eventType: eventTypes,
     });
 
+    // Save the user
     await newUser.save();
+
+    // Use searchCityLocation to update the user's city information
+    const { latitude, longitude } = await searchCityLocation(city);
+
+    if (newUser) {
+      newUser.city = {
+        city,
+        latitude,
+        longitude,
+      };
+
+      await newUser.save();
+    }
+
 
     res.status(201).json({
       success: true,
