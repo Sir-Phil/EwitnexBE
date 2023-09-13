@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTicket = exports.updateTicket = exports.deletePerformer = exports.updatePerformerImage = exports.deleteEvent = exports.updateEvents = exports.getEventDetails = exports.getAllEventsByTypes = exports.eventTicket = exports.eventPerformerInfo = exports.eventLocation = exports.eventProgramCover = exports.createEventInfo = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const event_1 = __importDefault(require("../schema/event"));
-const uuid_1 = require("uuid");
 const users_1 = __importDefault(require("../schema/users"));
 // const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
 //     const {
@@ -179,12 +178,10 @@ const eventTicket = (0, express_async_handler_1.default)((req, res, next) => __a
     try {
         const { ticket } = req.body;
         const eventId = req.params.eventId;
-        const uniqueID = (0, uuid_1.v4)();
-        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { $set: { uniqueID, ticket } }, { new: true });
+        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { $set: { ticket } }, { new: true });
         res.status(200).json({
             success: true,
             message: "Event ticket updated successfully",
-            uniqueID: uniqueID,
             data: updateEventInfo
         });
     }

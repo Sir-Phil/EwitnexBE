@@ -12,108 +12,319 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.getUserDetails = exports.UpdateUserPassword = exports.updateUserInfo = exports.logOutUser = exports.getLoggedInUser = exports.loginUser = exports.selectEventTypesStep7 = exports.provideCityLocationStep5 = exports.provideUsernameStep6 = exports.chooseGenderStep4 = exports.continueSignupStep3 = exports.confirmEmailStep2 = exports.createUserStep1 = void 0;
+exports.deleteUser = exports.getUserDetails = exports.UpdateUserPassword = exports.updateUserInfo = exports.logOutUser = exports.getLoggedInUser = exports.loginUser = exports.createUser = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const users_1 = __importDefault(require("../schema/users"));
-const searchCity_1 = require("../utils/searchCity");
+const jwtToken_1 = __importDefault(require("../utils/jwtToken"));
 const generateusername_1 = __importDefault(require("../utils/generateusername"));
 const genderOption_1 = __importDefault(require("../interface/genderOption"));
-const jwtToken_1 = __importDefault(require("../utils/jwtToken"));
-// Controller to create a new user step by step
-const createUserStep1 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
+// // Controller to create a new user step by step
+// const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//   try {
+//     const { firstName, lastName } = req.body;
+//     // Create a new user with first name and last name
+//     const newUser = new User({
+//       firstName,
+//       lastName,
+//     });
+//     const createdUser = await newUser.save();
+//     res.status(201).json({
+//       success: true,
+//       data: {
+//         message: 'Step 1 completed. Proceed to the next step.',
+//         //user: createdUser
+//         userId: createdUser._id,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error creating user' + (error as Error).message,
+//     });
+//   }
+// });
+// const confirmEmailStep2 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//   try {
+//     const userId = req.params.userId;
+//     const { email } = req.body;
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         error: 'User not found',
+//       });
+//     }
+//     // Check if the provided email already exists in the database
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser && existingUser._id.toString() !== userId) {
+//       res.status(400).json({
+//         success: false,
+//         error: 'Email already exists',
+//       });
+//     }
+//     // Update user's email
+//     if(user){
+//       user.email = email;
+//       await user.save();
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         message: `Using ${user.email} Sign Up. Proceed to the next step.`,
+//         user,
+//       },
+//     });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error confirming email',
+//     });
+//   }
+// });
+// const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//   try {
+//     const { phoneNumber, password, confirmPassword } = req.body;
+//     const userId = req.params.userId;
+//     // Find the user by ID
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         error: 'User not found',
+//       });
+//     }
+//     // Validate phoneNumber
+//     if (!phoneNumber) {
+//       res.status(400).json({
+//         success: false,
+//         error: 'Phone number is required',
+//       });
+//     }
+//     // Check if the phoneNumber already exists for another user
+//     const existingUserWithPhoneNumber = await User.findOne({ phoneNumber });
+//     if (existingUserWithPhoneNumber && existingUserWithPhoneNumber._id.toString() !== userId) {
+//       res.status(400).json({
+//         success: false,
+//         error: 'Phone number is already in use by another user',
+//       });
+//     }
+//     // Validate password
+//     if (password !== confirmPassword) {
+//       res.status(400).json({
+//         success: false,
+//         error: 'Passwords do not match',
+//       });
+//     }
+//     // Update user information
+//     if (user) {
+//       user.phoneNumber = phoneNumber;
+//       user.password = password;
+//       await user.save();
+//     }
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         message: 'Step 3 completed. Proceed to the next step.',
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error step 3',
+//     });
+//   }
+// });
+// // Controller for Step 3: Choose Gender
+// const chooseGenderStep4 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//     try {
+//       const { gender } = req.body;
+//       const userId = req.params.userId;
+//       // Find the user by ID
+//       const user = await User.findById(userId);
+//       if (!user) {
+//          res.status(404).json({
+//           success: false,
+//           error: 'User not found',
+//         });
+//       }
+//      // Validate and update user gender
+//     if (!gender || ![Gender.Male, Gender.Female, Gender.PreferredNotToSay].includes(gender)) {
+//       res.status(400).json({
+//         success: false,
+//         error: 'Invalid gender selection',
+//       });
+//     }
+//     if(user){
+//         user.gender = gender;
+//     await user.save();
+//     }
+//       res.status(200).json({
+//         success: true,
+//         data: {
+//           message: 'Step 4 completed. Proceed to the next step.',
+//         },
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({
+//         success: false,
+//         error: 'Error in Step 4',
+//       });
+//     }
+// });
+// // Controller for Step 5: Provide City Location
+// const provideCityLocationStep5 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//   try {
+//     const { city } = req.body;
+//     const userId = req.params.userId;
+//     const user = await User.findById(userId);
+//     if (!user) {
+//      res.status(404).json({
+//         success: false,
+//         error: 'User not found',
+//       });
+//     }
+//     if (!city) {
+//        res.status(400).json({
+//         success: false,
+//         error: 'City is required',
+//       });
+//     }
+//     const { latitude, longitude } = await searchCityLocation(city);
+//     if (user) {
+//       user.city = {
+//         city,
+//         latitude,
+//         longitude,
+//       };
+//       await user.save();
+//       res.status(200).json({
+//         success: true,
+//         data: {
+//           message: 'Step 5 completed. Proceed to the next step.',
+//           user,
+//         },
+//       });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error in Step 5',
+//     });
+//   }
+// });
+// const provideUsernameStep6 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//   try {
+//     const { username } = req.body;
+//     const userId = req.params.userId;
+//     // Find the user by ID
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         error: 'User not found',
+//       });
+//     }
+//     // Validate and update user username
+//     if (!username) {
+//       const existingUserWithUsername = await User.findOne({ username });
+//       if (existingUserWithUsername) {
+//         res.status(409).json({
+//           success: false,
+//           error: 'Username is already in use',
+//         });
+//       }
+//       // If username is not provided, suggest a new username based on first name and last name
+//       const suggestedUsername = generateSuggestedUsername(user!.firstName, user!.lastName);
+//       user!.username = suggestedUsername;
+//     } else {
+//       // If username is provided, check if it's already in use
+//       const existingUserWithUsername = await User.findOne({ username });
+//       if (existingUserWithUsername) {
+//        res.status(409).json({
+//           success: false,
+//           error: 'Username is already in use',
+//         });
+//       }
+//       user!.username = username;
+//     }
+//     await user!.save();
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         message: 'Step 6 completed. Proceed to the next step.',
+//         user,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error in Step 6',
+//     });
+//   }
+// });
+// const selectEventTypesStep7 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//     try {
+//       const { eventTypes } = req.body;
+//       const userId = req.params.userId;
+//       // Find the user by ID
+//       const user = await User.findById(userId);
+//       if (!user) {
+//         res.status(404).json({
+//           success: false,
+//           error: 'User not found',
+//         });
+//       }
+//       // Validate and update user event types
+//       if (!eventTypes || !Array.isArray(eventTypes) || eventTypes.length === 0) {
+//         res.status(400).json({
+//           success: false,
+//           error: 'Please select at least one event type',
+//         });
+//       }
+//       if (user) {
+//         user.eventType = eventTypes;
+//         await user.save();
+//       }
+//       res.status(200).json({
+//         success: true,
+//         data: {
+//           message: 'Signup process is now complete. Thanks',
+//         },
+//       });
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({
+//         success: false,
+//         error: 'Error in Step 7',
+//       });
+//     }
+// });
+const createUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { firstName, lastName } = req.body;
-        // Create a new user with first name and last name
-        const newUser = new users_1.default({
-            firstName,
-            lastName,
-        });
-        const createdUser = yield newUser.save();
-        res.status(201).json({
-            success: true,
-            data: {
-                message: 'Step 1 completed. Proceed to the next step.',
-                //user: createdUser
-                userId: createdUser._id,
-            },
-        });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error creating user' + error.message,
-        });
-    }
-}));
-exports.createUserStep1 = createUserStep1;
-const confirmEmailStep2 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userId = req.params.userId;
-        const { email } = req.body;
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
+        const { firstName, lastName, email, phoneNumber, password, confirmPassword, gender, city, eventTypes } = req.body;
         // Check if the provided email already exists in the database
-        const existingUser = yield users_1.default.findOne({ email });
-        if (existingUser && existingUser._id.toString() !== userId) {
+        const existingUserByEmail = yield users_1.default.findOne({ email });
+        if (existingUserByEmail) {
             res.status(400).json({
                 success: false,
                 error: 'Email already exists',
             });
+            return;
         }
-        // Update user's email
-        if (user) {
-            user.email = email;
-            yield user.save();
-            res.status(200).json({
-                success: true,
-                data: {
-                    message: `Using ${user.email} Sign Up. Proceed to the next step.`,
-                    user,
-                },
-            });
-        }
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error confirming email',
-        });
-    }
-}));
-exports.confirmEmailStep2 = confirmEmailStep2;
-const continueSignupStep3 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { phoneNumber, password, confirmPassword } = req.body;
-        const userId = req.params.userId;
-        // Find the user by ID
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
-        // Validate phoneNumber
-        if (!phoneNumber) {
-            res.status(400).json({
-                success: false,
-                error: 'Phone number is required',
-            });
-        }
-        // Check if the phoneNumber already exists for another user
-        const existingUserWithPhoneNumber = yield users_1.default.findOne({ phoneNumber });
-        if (existingUserWithPhoneNumber && existingUserWithPhoneNumber._id.toString() !== userId) {
+        // Check if the provided phone number already exists in the database
+        const existingUserByPhoneNumber = yield users_1.default.findOne({ phoneNumber });
+        if (existingUserByPhoneNumber) {
             res.status(400).json({
                 success: false,
                 error: 'Phone number is already in use by another user',
             });
+            return;
         }
         // Validate password
         if (password !== confirmPassword) {
@@ -121,155 +332,49 @@ const continueSignupStep3 = (0, express_async_handler_1.default)((req, res, _nex
                 success: false,
                 error: 'Passwords do not match',
             });
+            return;
         }
-        // Update user information
-        if (user) {
-            user.phoneNumber = phoneNumber;
-            user.password = password;
-            yield user.save();
-        }
-        res.status(200).json({
-            success: true,
-            data: {
-                message: 'Step 3 completed. Proceed to the next step.',
-            },
-        });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error step 3',
-        });
-    }
-}));
-exports.continueSignupStep3 = continueSignupStep3;
-// Controller for Step 3: Choose Gender
-const chooseGenderStep4 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { gender } = req.body;
-        const userId = req.params.userId;
-        // Find the user by ID
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
-        // Validate and update user gender
-        if (!gender || ![genderOption_1.default.Male, genderOption_1.default.Female, genderOption_1.default.PreferredNotToSay].includes(gender)) {
+        // Validate gender
+        if (![genderOption_1.default.Male, genderOption_1.default.Female, genderOption_1.default.PreferredNotToSay].includes(gender)) {
             res.status(400).json({
                 success: false,
                 error: 'Invalid gender selection',
             });
+            return;
         }
-        if (user) {
-            user.gender = gender;
-            yield user.save();
-        }
-        res.status(200).json({
-            success: true,
-            data: {
-                message: 'Step 4 completed. Proceed to the next step.',
-            },
-        });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error in Step 4',
-        });
-    }
-}));
-exports.chooseGenderStep4 = chooseGenderStep4;
-// Controller for Step 5: Provide City Location
-const provideCityLocationStep5 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { city } = req.body;
-        const userId = req.params.userId;
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
-        if (!city) {
-            res.status(400).json({
-                success: false,
-                error: 'City is required',
-            });
-        }
-        const { latitude, longitude } = yield (0, searchCity_1.searchCityLocation)(city);
-        if (user) {
-            user.city = {
-                city,
-                latitude,
-                longitude,
-            };
-            yield user.save();
-            res.status(200).json({
-                success: true,
-                data: {
-                    message: 'Step 5 completed. Proceed to the next step.',
-                    user,
-                },
-            });
-        }
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error in Step 5',
-        });
-    }
-}));
-exports.provideCityLocationStep5 = provideCityLocationStep5;
-const provideUsernameStep6 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { username } = req.body;
-        const userId = req.params.userId;
-        // Find the user by ID
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
-        // Validate and update user username
-        if (!username) {
-            const existingUserWithUsername = yield users_1.default.findOne({ username });
-            if (existingUserWithUsername) {
-                res.status(409).json({
-                    success: false,
-                    error: 'Username is already in use',
-                });
+        // Generate a suggested username
+        let username = (0, generateusername_1.default)(firstName, lastName);
+        // Check if the generated username already exists in the database
+        let isUsernameTaken = true;
+        while (isUsernameTaken) {
+            const existingUserByUsername = yield users_1.default.findOne({ username });
+            if (!existingUserByUsername) {
+                // Username is not taken, break the loop
+                isUsernameTaken = false;
             }
-            // If username is not provided, suggest a new username based on first name and last name
-            const suggestedUsername = (0, generateusername_1.default)(user.firstName, user.lastName);
-            user.username = suggestedUsername;
-        }
-        else {
-            // If username is provided, check if it's already in use
-            const existingUserWithUsername = yield users_1.default.findOne({ username });
-            if (existingUserWithUsername) {
-                res.status(409).json({
-                    success: false,
-                    error: 'Username is already in use',
-                });
+            else {
+                // Generate a new username and check again
+                username = (0, generateusername_1.default)(firstName, lastName);
             }
-            user.username = username;
         }
-        yield user.save();
-        res.status(200).json({
+        // Create a new user
+        const newUser = new users_1.default({
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            password,
+            gender,
+            city,
+            username,
+            //eventType: eventTypes,
+        });
+        yield newUser.save();
+        res.status(201).json({
             success: true,
             data: {
-                message: 'Step 6 completed. Proceed to the next step.',
-                user,
+                message: 'User created successfully',
+                user: newUser,
             },
         });
     }
@@ -277,50 +382,11 @@ const provideUsernameStep6 = (0, express_async_handler_1.default)((req, res, _ne
         console.error(error);
         res.status(500).json({
             success: false,
-            error: 'Error in Step 6',
+            error: 'Error creating user',
         });
     }
 }));
-exports.provideUsernameStep6 = provideUsernameStep6;
-const selectEventTypesStep7 = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { eventTypes } = req.body;
-        const userId = req.params.userId;
-        // Find the user by ID
-        const user = yield users_1.default.findById(userId);
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: 'User not found',
-            });
-        }
-        // Validate and update user event types
-        if (!eventTypes || !Array.isArray(eventTypes) || eventTypes.length === 0) {
-            res.status(400).json({
-                success: false,
-                error: 'Please select at least one event type',
-            });
-        }
-        if (user) {
-            user.eventType = eventTypes;
-            yield user.save();
-        }
-        res.status(200).json({
-            success: true,
-            data: {
-                message: 'Signup process is now complete. Thanks',
-            },
-        });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            error: 'Error in Step 7',
-        });
-    }
-}));
-exports.selectEventTypesStep7 = selectEventTypesStep7;
+exports.createUser = createUser;
 // @Desc Get log-in user
 // @Route /api/users/login-user
 // @Method GET
