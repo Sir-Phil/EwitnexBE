@@ -98,7 +98,7 @@ const eventSchema = new mongoose_1.default.Schema({
         }
     },
     performer: [eventPerformer_1.performerSchema],
-    ticket: [ticketing_1.ticketSchema],
+    tickets: [ticketing_1.ticketSchema],
     createdAt: {
         type: Date,
         default: Date.now(),

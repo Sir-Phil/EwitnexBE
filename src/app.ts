@@ -7,6 +7,7 @@ import { errorHandler, notFound } from "./middleware/errorMiddleware";
 
 import usersRoute from "./routes/usersRoute";
 import eventRoute from "./routes/eventRoute";
+import orderRoutes from "./routes/orderRoutes";
 
 const app = express();
 
@@ -29,6 +30,7 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 //endpoints routes
 app.use("/api/users", usersRoute );
 app.use("/api/events", eventRoute);
+app.use("/api/booking", orderRoutes);
 
 //for ErrorHandling
 app.use(errorHandler);

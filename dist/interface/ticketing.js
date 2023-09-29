@@ -13,7 +13,7 @@ exports.ticketSchema = new mongoose_1.Schema({
     ticketName: {
         type: String,
     },
-    price: {
+    ticketPrice: {
         type: Number,
     },
     ticketQty: {

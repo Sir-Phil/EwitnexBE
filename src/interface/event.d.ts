@@ -28,7 +28,7 @@ export interface IEvent extends mongoose.Document {
         endDate: Date;
     }
     performer: IEventPerformer[];
-    ticket: ITicket[];
+    tickets: ITicket[];
 }
 
 export interface Request {

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.getUserDetails = exports.UpdateUserPassword = exports.updateUserInfo = exports.logOutUser = exports.getLoggedInUser = exports.loginUser = exports.createUser = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const users_1 = __importDefault(require("../schema/users"));
+const searchCity_1 = require("../utils/searchCity");
 const jwtToken_1 = __importDefault(require("../utils/jwtToken"));
 const generateusername_1 = __importDefault(require("../utils/generateusername"));
 const genderOption_1 = __importDefault(require("../interface/genderOption"));
@@ -365,11 +366,21 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             phoneNumber,
             password,
             gender,
-            city,
             username,
             //eventType: eventTypes,
         });
+        // Save the user
         yield newUser.save();
+        // Use searchCityLocation to update the user's city information
+        const { latitude, longitude } = yield (0, searchCity_1.searchCityLocation)(city);
+        if (newUser) {
+            newUser.city = {
+                city,
+                latitude,
+                longitude,
+            };
+            yield newUser.save();
+        }
         res.status(201).json({
             success: true,
             data: {
