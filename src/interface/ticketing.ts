@@ -6,7 +6,7 @@ import { refundHandleOption } from "./refundHandler";
 interface ITicket extends mongoose.Document{
     ticketType: typeof ticketTypeOptions;
     ticketName: string;
-    price: number;
+    ticketPrice: number;
     ticketQty: number;
     ticketHandle: typeof ticketHandlerOptions;
     ticketRefund: typeof refundHandleOption;
@@ -20,7 +20,7 @@ export const ticketSchema = new Schema<ITicket>({
     ticketName: {
         type: String,
     },
-    price:{
+    ticketPrice:{
         type: Number,
     },
     ticketQty:{

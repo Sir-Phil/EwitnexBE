@@ -2,11 +2,12 @@
 import express from "express";
 import { createEventInfo, deleteEvent, deletePerformer, deleteTicket, eventLocation, eventPerformerInfo, eventProgramCover, eventTicket, getAllEventsByTypes, getEventDetails, updateEvents, updatePerformerImage, updateTicket } from "../controllers/events";
 import upload from "../utils/multer";
+import { isAuthenticated } from "../middleware/auth";
 
 
 const router = express.Router();
 
-router.post("/create", createEventInfo);
+router.post("/create", isAuthenticated, createEventInfo);
 router.post("/:eventId/update-cover-program", upload.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'filePDF', maxCount: 1 },
