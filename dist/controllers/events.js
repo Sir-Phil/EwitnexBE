@@ -176,9 +176,16 @@ const eventPerformerInfo = (0, express_async_handler_1.default)((req, res, next)
 exports.eventPerformerInfo = eventPerformerInfo;
 const eventTicket = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { ticket } = req.body;
+        const { tickets } = req.body;
         const eventId = req.params.eventId;
-        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { $set: { ticket } }, { new: true });
+        // Ensure that 'tickets' in the request body is an array
+        if (!Array.isArray(tickets)) {
+            res.status(400).json({
+                success: false,
+                error: "Invalid ticket information provided",
+            });
+        }
+        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { $set: { tickets } }, { new: true });
         res.status(200).json({
             success: true,
             message: "Event ticket updated successfully",
