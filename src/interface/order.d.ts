@@ -8,7 +8,6 @@ export interface IOrder extends mongoose.Document {
     event: mongoose.Types.ObjectId | IEvent;
     ticket: mongoose.Types.ObjectId | IEvent;
     quantity: number;
-    ticketPrice : number;
     firstName: string;
     lastName: string;
     email: string;

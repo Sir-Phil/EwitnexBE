@@ -212,13 +212,22 @@ const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next
 const eventTicket = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const {ticket} = req.body;
+        const {tickets} = req.body;
         const eventId = req.params.eventId;
+
+        // Ensure that 'tickets' in the request body is an array
+        if (!Array.isArray(tickets)) {
+            res.status(400).json({
+            success: false,
+            error: "Invalid ticket information provided",
+            });
+        }
+
 
         
         const updateEventInfo = await Event.findByIdAndUpdate(
             eventId,
-            { $set: {ticket } },
+            { $set: {tickets } },
             { new: true }
           );
         

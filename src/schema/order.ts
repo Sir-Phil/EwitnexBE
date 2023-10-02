@@ -26,10 +26,6 @@ const orderSchema: Schema<IOrder> = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    ticketPrice: {
-        type: Number,
-        required: true
-    },
     firstName: {
         type:String,
         required: true
