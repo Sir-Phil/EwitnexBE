@@ -13,7 +13,7 @@ router.post("/:eventId/update-cover-program", upload.fields([
     { name: 'filePDF', maxCount: 1 },
   ]), eventProgramCover);
 router.post("/:eventId/event-location", eventLocation);
-router.post("/:eventId/event-performer", upload.single('performerImage'), eventPerformerInfo);
+router.post("/:eventId/event-performer", upload.fields([{name: 'performerImage', maxCount: 1}]), eventPerformerInfo);
 router.post("/:eventId/event-ticket", eventTicket);
 
 // getAll activities 
@@ -23,12 +23,12 @@ router.get("/details/:eventId", getEventDetails);
 
 //Updates Events 
 router.put("/update-event/:eventId", updateEvents);
-router.put("/:eventId/performers/:performerIndex/update-image", upload.single('performerImage'), updatePerformerImage);
+router.put("/:eventId/performers/:performerId/update-image", upload.single('performerImage'), updatePerformerImage);
 router.put("/:eventId/tickets/:ticketId", updateTicket);
 
 //Deletion route
 router.delete("/delete-event/:eventId", deleteEvent);
-router.delete("/:eventId/performers/:performerId", deletePerformer);
+router.delete("/:eventId/delete-performers", deletePerformer);
 router.delete("/:eventId/tickets/:ticketId", deleteTicket);
 
 
