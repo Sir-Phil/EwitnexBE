@@ -146,26 +146,40 @@ const eventLocation = (0, express_async_handler_1.default)((req, res, next) => _
 exports.eventLocation = eventLocation;
 const eventPerformerInfo = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const performerData = req.body.performer;
-        const performers = JSON.parse(performerData); // Annotate the type as Array<any>
-        if (!performers.every(performer => typeof performer === 'object')) {
+        const { performer } = req.body;
+        console.log("receiving data", performer);
+        const uploadedFiles = req.files;
+        // Get the performerImage file from the uploaded files
+        const performerImage = uploadedFiles['performerImage'] ? uploadedFiles['performerImage'][0] : undefined;
+        if (!performer || (typeof performer !== 'object' && typeof performer !== 'string')) {
             res.status(400).json({
                 success: false,
                 message: "Invalid performing artist data",
             });
+            return;
+        }
+        let modifiedPerformer = typeof performer === 'string' ? JSON.parse(performer) : performer;
+        // If performerImage is defined in the request, attach it to the performer object
+        if (performerImage) {
+            if (typeof modifiedPerformer === 'object') {
+                modifiedPerformer.performerImage = '/' + performerImage.path.replace(/\\/g, '/'); // Add a leading slash and replace backslashes with forward slashes
+                const performerImageUrl = `/uploads/performerImage/${performerImage.filename}`;
+                modifiedPerformer.performerImageUrl = performerImageUrl; // Store the URL in the object
+            }
+            else {
+                res.status(400).json({
+                    success: false,
+                    message: "Invalid performing artist data",
+                });
+                return;
+            }
         }
         const eventId = req.params.eventId;
-        const performersWithImages = performers.map(performer => {
-            if (req.file) {
-                performer.performerImage = req.file.path;
-            }
-            return performer;
-        });
-        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { performer: performersWithImages }, // Updated array of performers
-        { new: true });
+        // Update the event with the modified performer object
+        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { performer: modifiedPerformer }, { new: true });
         res.status(200).json({
             success: true,
-            message: "Event Performers updated successfully",
+            message: "Event Performer updated successfully",
             data: updateEventInfo,
         });
     }
@@ -293,28 +307,50 @@ exports.deleteEvent = deleteEvent;
 const updatePerformerImage = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const eventId = req.params.eventId;
-        const performerIndex = req.params.performerIndex; // Assuming you're passing the performer index as a parameter
-        if (req.file) {
-            const newImage = req.file.path;
-            const updateEventInfo = yield event_1.default.findOneAndUpdate({ _id: eventId, 'performer._id': performerIndex }, { $set: { 'performer.$.performerImage': newImage } }, { new: true });
-            if (!updateEventInfo) {
-                res.status(404).json({
-                    success: false,
-                    message: "Event or performer not found",
-                });
-            }
-            res.status(200).json({
-                success: true,
-                message: "Performer image updated successfully",
-                data: updateEventInfo,
-            });
-        }
-        else {
-            res.status(400).json({
+        const performerId = req.params.performerId; // Assuming you're passing the performerId as a parameter
+        // Check if the event exists
+        const event = yield event_1.default.findById(eventId);
+        if (!event) {
+            res.status(404).json({
                 success: false,
-                message: "No performerImage file provided",
+                message: "Event not found",
             });
         }
+        // Find the performer within the event
+        const performer = event.performer;
+        // Check if the performer exists
+        if (!performer) {
+            res.status(404).json({
+                success: false,
+                message: "Performer not found in the event",
+            });
+        }
+        // Update the performer's fields
+        if (req.body.isPerformer !== undefined) {
+            performer.isPerformer = req.body.isPerformer;
+        }
+        if (req.body.nameOfPerformer) {
+            performer.nameOfPerformer = req.body.nameOfPerformer;
+        }
+        if (req.body.performerTitle) {
+            performer.performerTitle = req.body.performerTitle;
+        }
+        if (req.body.performerRole) {
+            performer.performerRole = req.body.performerRole;
+        }
+        if (req.body.aboutPerformer) {
+            performer.aboutPerformer = req.body.aboutPerformer;
+        }
+        if (req.file) {
+            performer.performerImage = '/' + req.file.path.replace(/\\/g, '/');
+        }
+        // Save the event with the updated performer
+        const updatedEvent = yield event.save();
+        res.status(200).json({
+            success: true,
+            message: "Performer updated successfully",
+            data: updatedEvent,
+        });
     }
     catch (error) {
         next(error);
@@ -324,19 +360,20 @@ exports.updatePerformerImage = updatePerformerImage;
 const deletePerformer = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const eventId = req.params.eventId;
-        const performerId = req.params.performerId; // Assuming you're passing the performer's _id as a parameter
-        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { $pull: { performer: { _id: performerId } } }, // Remove the performer with the specified _id
+        const event = yield event_1.default.findOneAndUpdate({ _id: eventId }, { performer: {} }, // Set performer to an empty object
         { new: true });
-        if (!updateEventInfo) {
+        console.log("Updated Event Data:", event);
+        if (!event) {
             res.status(404).json({
                 success: false,
                 message: "Event not found",
             });
+            return;
         }
         res.status(200).json({
             success: true,
             message: "Performer deleted successfully",
-            data: updateEventInfo,
+            data: event,
         });
     }
     catch (error) {

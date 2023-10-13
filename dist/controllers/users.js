@@ -308,7 +308,7 @@ const genderOption_1 = __importDefault(require("../interface/genderOption"));
 // });
 const createUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { firstName, lastName, email, phoneNumber, password, confirmPassword, gender, city, eventTypes } = req.body;
+        const { firstName, lastName, email, phoneNumber, password, gender, city, eventType } = req.body;
         // Check if the provided email already exists in the database
         const existingUserByEmail = yield users_1.default.findOne({ email });
         if (existingUserByEmail) {
@@ -328,13 +328,13 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             return;
         }
         // Validate password
-        if (password !== confirmPassword) {
-            res.status(400).json({
-                success: false,
-                error: 'Passwords do not match',
-            });
-            return;
-        }
+        // if (password !== confirmPassword) {
+        //   res.status(400).json({
+        //     success: false,
+        //     error: 'Passwords do not match',
+        //   });
+        //   return;
+        // }
         // Validate gender
         if (![genderOption_1.default.Male, genderOption_1.default.Female, genderOption_1.default.PreferredNotToSay].includes(gender)) {
             res.status(400).json({
@@ -367,7 +367,7 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             password,
             gender,
             username,
-            //eventType: eventTypes,
+            eventType,
         });
         // Save the user
         yield newUser.save();
@@ -445,8 +445,7 @@ exports.loginUser = loginUser;
 // @Method GET
 const getLoggedInUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("User ID:", req.user.id);
-        const user = yield users_1.default.findById(req.user.id);
+        const user = yield users_1.default.findById(req.user.id).select("-password");
         if (!user) {
             res.status(400).json({
                 success: false,
@@ -569,7 +568,7 @@ exports.UpdateUserPassword = UpdateUserPassword;
 //@Access Admin
 const getUserDetails = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield users_1.default.findById(req.params.id);
+        const user = yield users_1.default.findById(req.params.id).select("-password");
         res.status(201).json({
             success: true,
             user,
