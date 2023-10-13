@@ -346,7 +346,7 @@ import Gender from '../interface/genderOption';
 
 const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
-    const { firstName, lastName, email, phoneNumber, password, confirmPassword, gender, city, eventTypes } = req.body;
+    const { firstName, lastName, email, phoneNumber, password, gender, city, eventType } = req.body;
 
     // Check if the provided email already exists in the database
     const existingUserByEmail = await User.findOne({ email });
@@ -369,13 +369,13 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
     }
 
     // Validate password
-    if (password !== confirmPassword) {
-      res.status(400).json({
-        success: false,
-        error: 'Passwords do not match',
-      });
-      return;
-    }
+    // if (password !== confirmPassword) {
+    //   res.status(400).json({
+    //     success: false,
+    //     error: 'Passwords do not match',
+    //   });
+    //   return;
+    // }
 
     // Validate gender
     if (![Gender.Male, Gender.Female, Gender.PreferredNotToSay].includes(gender)) {
@@ -412,7 +412,7 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       password,
       gender,
       username,
-      //eventType: eventTypes,
+      eventType,
     });
 
     // Save the user
@@ -505,8 +505,7 @@ const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: N
 
 const getLoggedInUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
-    console.log("User ID:", req.user.id);
-      const user = await User.findById(req.user.id);
+      const user = await User.findById(req.user.id).select("-password");
      
       if (!user) {
           res.status(400).json({
@@ -648,7 +647,7 @@ const UpdateUserPassword = asyncHandler (async(req: IUserRequest, res: Response,
 
 const getUserDetails = asyncHandler(async(req: Request, res: Response, _next: NextFunction) => {
   try {
-      const user = await User.findById(req.params.id)
+      const user = await User.findById(req.params.id).select("-password")
 
       res.status(201).json({
       success: true,
