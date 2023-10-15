@@ -19,7 +19,7 @@ const searchCity_1 = require("../utils/searchCity");
 const jwtToken_1 = __importDefault(require("../utils/jwtToken"));
 const generateusername_1 = __importDefault(require("../utils/generateusername"));
 const genderOption_1 = __importDefault(require("../interface/genderOption"));
-// // Controller to create a new user step by step
+const userValidator_1 = require("../validators/userValidator");
 // const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
 //   try {
 //     const { firstName, lastName } = req.body;
@@ -308,7 +308,7 @@ const genderOption_1 = __importDefault(require("../interface/genderOption"));
 // });
 const createUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { firstName, lastName, email, phoneNumber, password, gender, city, eventType } = req.body;
+        const { firstName, lastName, email, phoneNumber, password, gender, city, interest, providedUsername } = req.body;
         // Check if the provided email already exists in the database
         const existingUserByEmail = yield users_1.default.findOne({ email });
         if (existingUserByEmail) {
@@ -343,19 +343,22 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             });
             return;
         }
-        // Generate a suggested username
-        let username = (0, generateusername_1.default)(firstName, lastName);
-        // Check if the generated username already exists in the database
-        let isUsernameTaken = true;
-        while (isUsernameTaken) {
-            const existingUserByUsername = yield users_1.default.findOne({ username });
-            if (!existingUserByUsername) {
-                // Username is not taken, break the loop
-                isUsernameTaken = false;
-            }
-            else {
-                // Generate a new username and check again
-                username = (0, generateusername_1.default)(firstName, lastName);
+        let username = providedUsername; // Use provided username if available
+        if (!username) {
+            // If a username is not provided, generate a suggested username
+            username = (0, generateusername_1.default)(firstName, lastName);
+            // Check if the generated username already exists in the database
+            let isUsernameTaken = true;
+            while (isUsernameTaken) {
+                const existingUserByUsername = yield users_1.default.findOne({ username });
+                if (!existingUserByUsername) {
+                    // Username is not taken, break the loop
+                    isUsernameTaken = false;
+                }
+                else {
+                    // Generate a new username and check again
+                    username = (0, generateusername_1.default)(firstName, lastName);
+                }
             }
         }
         // Create a new user
@@ -367,7 +370,7 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             password,
             gender,
             username,
-            eventType,
+            interest,
         });
         // Save the user
         yield newUser.save();
@@ -401,31 +404,77 @@ exports.createUser = createUser;
 // @Desc Get log-in user
 // @Route /api/users/login-user
 // @Method GET
+// const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
+//     try {
+//       const { identifier, password } = req.body;
+//       // Find the user by either email, username, or phoneNumber
+//       const user = await User.findOne({
+//         $or: [
+//           { email: identifier },
+//           { username: identifier },
+//           { phoneNumber: isNaN(identifier) ? undefined : identifier },
+//         ],
+//       }).select("+password"); 
+//       if (!user) {
+//         console.log('User not found');
+//         res.status(401).json({
+//           success: false,
+//           error: 'Invalid email, username, or password',
+//         });
+//       }
+//       console.log('Stored Hashed Password:', user?.password);
+//       const isPasswordMatch = await user?.comparePassword(password);
+//       if (!isPasswordMatch) {
+//         console.log('Authentication Failed');
+//         res.status(401).json({
+//           success: false,
+//           error: 'Invalid email, username, or password',
+//         });
+//       }
+//       // Password match, send the token
+//       sendToken(user, 201, res);
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({
+//         success: false,
+//         error: 'Error logging in',
+//       });
+//     }
+// });
 const loginUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { identifier, password } = req.body;
-        // Find the user by either email, username, or phoneNumber
-        const user = yield users_1.default.findOne({
-            $or: [
-                { email: identifier },
-                { username: identifier },
-                { phoneNumber: isNaN(identifier) ? undefined : identifier },
-            ],
-        }).select("+password");
+        let user;
+        if ((0, userValidator_1.isValidEmail)(identifier)) {
+            user = yield users_1.default.findOne({ email: identifier }).select("+password");
+        }
+        else if ((0, userValidator_1.isValidPhoneNumber)(identifier)) {
+            user = yield users_1.default.findOne({ phoneNumber: identifier }).select("+password");
+        }
+        else if ((0, userValidator_1.isValidUsername)(identifier)) {
+            user = yield users_1.default.findOne({ username: identifier }).select("+password");
+        }
         if (!user) {
-            console.log('User not found');
+            let errorMessage = 'Invalid credentials';
+            if ((0, userValidator_1.isValidEmail)(identifier)) {
+                errorMessage = 'Invalid email';
+            }
+            else if ((0, userValidator_1.isValidPhoneNumber)(identifier)) {
+                errorMessage = 'Invalid phone number';
+            }
+            else if ((0, userValidator_1.isValidUsername)(identifier)) {
+                errorMessage = 'Invalid username';
+            }
             res.status(401).json({
                 success: false,
-                error: 'Invalid email, username, or password',
+                error: errorMessage,
             });
         }
-        console.log('Stored Hashed Password:', user === null || user === void 0 ? void 0 : user.password);
         const isPasswordMatch = yield (user === null || user === void 0 ? void 0 : user.comparePassword(password));
         if (!isPasswordMatch) {
-            console.log('Authentication Failed');
             res.status(401).json({
                 success: false,
-                error: 'Invalid email, username, or password',
+                error: 'Invalid password',
             });
         }
         // Password match, send the token

@@ -12,7 +12,7 @@ export interface IUser extends mongoose.Document {
     lastName:string;
     age: string;
     gender: typeof Gender;
-    eventType: typeof Category;
+    interest: typeof Category;
     email: string;
     password: string;
     avatar: string;

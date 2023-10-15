@@ -6,8 +6,9 @@ import sendToken from '../utils/jwtToken';
 import { IUserRequest } from '../interface/users';
 import generateSuggestedUsername from '../utils/generateusername';
 import Gender from '../interface/genderOption';
+import { isValidEmail, isValidPhoneNumber, isValidUsername } from '../validators/userValidator';
 
-// // Controller to create a new user step by step
+
 // const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
 //   try {
 //     const { firstName, lastName } = req.body;
@@ -346,7 +347,7 @@ import Gender from '../interface/genderOption';
 
 const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
-    const { firstName, lastName, email, phoneNumber, password, gender, city, eventType } = req.body;
+    const { firstName, lastName, email, phoneNumber, password, gender, city, interest, providedUsername } = req.body;
 
     // Check if the provided email already exists in the database
     const existingUserByEmail = await User.findOne({ email });
@@ -386,22 +387,25 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       return;
     }
 
-    // Generate a suggested username
-    let username = generateSuggestedUsername(firstName, lastName);
+    let username = providedUsername; // Use provided username if available
 
-    // Check if the generated username already exists in the database
-    let isUsernameTaken = true;
-    while (isUsernameTaken) {
-      const existingUserByUsername = await User.findOne({ username });
-      if (!existingUserByUsername) {
-        // Username is not taken, break the loop
-        isUsernameTaken = false;
-      } else {
-        // Generate a new username and check again
-        username = generateSuggestedUsername(firstName, lastName);
+    if (!username) {
+      // If a username is not provided, generate a suggested username
+      username = generateSuggestedUsername(firstName, lastName);
+
+      // Check if the generated username already exists in the database
+      let isUsernameTaken = true;
+      while (isUsernameTaken) {
+        const existingUserByUsername = await User.findOne({ username });
+        if (!existingUserByUsername) {
+          // Username is not taken, break the loop
+          isUsernameTaken = false;
+        } else {
+          // Generate a new username and check again
+          username = generateSuggestedUsername(firstName, lastName);
+        }
       }
     }
-
 
     // Create a new user
     const newUser = new User({
@@ -412,7 +416,7 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       password,
       gender,
       username,
-      eventType,
+      interest,
     });
 
     // Save the user
@@ -430,7 +434,6 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
 
       await newUser.save();
     }
-
 
     res.status(201).json({
       success: true,
@@ -451,51 +454,61 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
 
 
 
+
 // @Desc Get log-in user
 // @Route /api/users/login-user
 // @Method GET
 
+
 const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-    try {
-      const { identifier, password } = req.body;
-  
-      // Find the user by either email, username, or phoneNumber
-      const user = await User.findOne({
-        $or: [
-          { email: identifier },
-          { username: identifier },
-          { phoneNumber: isNaN(identifier) ? undefined : identifier },
-        ],
-      }).select("+password"); 
-  
-      if (!user) {
-        console.log('User not found');
-        res.status(401).json({
-          success: false,
-          error: 'Invalid email, username, or password',
-        });
+  try {
+    const { identifier, password } = req.body;
+
+    let user;
+
+    if (isValidEmail(identifier)) {
+      user = await User.findOne({ email: identifier }).select("+password");
+    } else if (isValidPhoneNumber(identifier)) {
+      user = await User.findOne({ phoneNumber: identifier }).select("+password");
+    } else if (isValidUsername(identifier)) {
+      user = await User.findOne({ username: identifier }).select("+password");
+    }
+
+    if (!user) {
+      let errorMessage = 'Invalid credentials';
+
+      if (isValidEmail(identifier)) {
+        errorMessage = 'Invalid email';
+      } else if (isValidPhoneNumber(identifier)) {
+        errorMessage = 'Invalid phone number';
+      } else if (isValidUsername(identifier)) {
+        errorMessage = 'Invalid username';
       }
-  
-      console.log('Stored Hashed Password:', user?.password);
-      const isPasswordMatch = await user?.comparePassword(password);
-  
-      if (!isPasswordMatch) {
-        console.log('Authentication Failed');
-        res.status(401).json({
-          success: false,
-          error: 'Invalid email, username, or password',
-        });
-      }
-  
-      // Password match, send the token
-      sendToken(user, 201, res);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
+
+      res.status(401).json({
         success: false,
-        error: 'Error logging in',
+        error: errorMessage,
       });
     }
+
+    const isPasswordMatch = await user?.comparePassword(password);
+
+    if (!isPasswordMatch) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid password',
+      });
+    }
+
+    // Password match, send the token
+    sendToken(user, 201, res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'Error logging in',
+    });
+  }
 });
 
 
