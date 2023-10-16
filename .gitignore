@@ -1,6 +1,6 @@
 /dist
 node_modules
 .env
-build
-uploads
-ReadMe
+/build
+nodemon.json
+/uploads
