@@ -34,7 +34,7 @@ const userSchema = new mongoose_1.default.Schema({
         type: String,
         enum: Object.values(genderOption_1.default)
     },
-    interest: {
+    interests: {
         type: [{ type: String, enum: Object.values(eventCategories_1.Category) }],
         required: false
     },

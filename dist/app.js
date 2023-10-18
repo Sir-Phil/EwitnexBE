@@ -11,6 +11,7 @@ const errorMiddleware_1 = require("./middleware/errorMiddleware");
 const usersRoute_1 = __importDefault(require("./routes/usersRoute"));
 const eventRoute_1 = __importDefault(require("./routes/eventRoute"));
 const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
+const resetRoute_1 = __importDefault(require("./routes/resetRoute"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -29,6 +30,7 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 app.use("/api/users", usersRoute_1.default);
 app.use("/api/events", eventRoute_1.default);
 app.use("/api/booking", orderRoutes_1.default);
+app.use("/api/auth", resetRoute_1.default);
 //for ErrorHandling
 app.use(errorMiddleware_1.errorHandler);
 app.use(errorMiddleware_1.notFound);
