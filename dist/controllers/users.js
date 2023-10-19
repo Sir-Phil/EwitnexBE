@@ -301,26 +301,28 @@ exports.getUserDetails = getUserDetails;
 // @Desc delete User for ---- 
 // @Route /api/users/delete-users/:id
 // @Method DELETE
-//@access Admin
-const deleteUser = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+//@access User
+const deleteUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield users_1.default.findById(req.params.id);
         if (!user) {
-            res.status(400).json({
+            res.status(404).json({
                 success: false,
                 error: "User is not available with this Id",
             });
         }
-        yield users_1.default.findByIdAndDelete(req.params.id);
-        res.status(201).json({
-            success: true,
-            message: "User deleted successfully!",
-        });
+        else {
+            yield users_1.default.findByIdAndDelete(req.params.id);
+            res.status(200).json({
+                success: true,
+                message: "User deleted successfully!",
+            });
+        }
     }
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message || "Internal Server Error"
+            error: error.message || "Internal Server Error",
         });
     }
 }));

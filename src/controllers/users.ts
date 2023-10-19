@@ -325,29 +325,29 @@ const getUserDetails = asyncHandler(async(req: Request, res: Response, _next: Ne
 // @Desc delete User for ---- 
 // @Route /api/users/delete-users/:id
 // @Method DELETE
-//@access Admin
-const deleteUser = asyncHandler(async(req:Request, res:Response, next: NextFunction) => {
+//@access User
+const deleteUser = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   try {
-      const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id);
 
-      if(!user){
-        res.status(400).json({
-          success: false,
-          error: "User is not available with this Id",
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: "User is not available with this Id",
       });
-      }
-  
+    } else {
       await User.findByIdAndDelete(req.params.id);
-  
-      res.status(201).json({
-          success: true,
-          message: "User deleted successfully!",
+
+      res.status(200).json({
+        success: true,
+        message: "User deleted successfully!",
       });
+    }
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message || "Internal Server Error"    
-  });
+      error: error.message || "Internal Server Error",
+    });
   }
 });
 

@@ -20,7 +20,7 @@ router.get("/logout", logOutUser);
 router.get("/user-details/:id", getUserDetails)
 router.put("/update-user", isAuthenticated, updateUserInfo);
 router.put("/update-user-password", isAuthenticated, UpdateUserPassword);
-router.delete("/delete-user/:id", deleteUser);
+router.delete("/delete-user/:id", isAuthenticated, deleteUser);
 
 
 export default router

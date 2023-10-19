@@ -37,7 +37,7 @@ const forgetPassword =  asyncHandler(async(req: IUserRequest, res: Response, nex
               subject: "Password Reset",
               message: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n`
               + `Please click on the following link or paste it into your browser to complete the process:\n\n`
-              + `http://localhost:9823/api/reset/${token}\n\n`
+              + `${process.env.SITE_URL}/reset/${token}\n\n`
               + `If you did not request this, please ignore this email and your password will remain unchanged.\n`
         });
         res.status(201).json({
@@ -61,28 +61,6 @@ const forgetPassword =  asyncHandler(async(req: IUserRequest, res: Response, nex
 // @Desc Get for mail token password
 // @Route /api/auth/reset/:token
 // @Method Get
-// const receiveTokeReset  = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const token = req.params.token;
-
-//   const user = await User.findOne({
-//     resetPasswordToken: token,
-//     resetPasswordTime: {$gt: Date.now()}
-//   });
-
-//   if(!user){
-//     res.status(400).json({
-//         error: "Password reset token is invalid or has expired",
-//     });
-//     res.status(200).json({ success: true, token: token });  
-// }
-//   } catch (error) {
-//     res.status(500).json({
-//         error: "An Error Occurred"
-//     });
-//   }
-// })
-
 const receiveTokeReset = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.params.token;
