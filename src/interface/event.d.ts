@@ -13,7 +13,6 @@ export interface IEvent extends mongoose.Document {
     EventType: typeof eventTypeOptions;
     category: typeof Category;
     isPublic: boolean;
-    isPrivate: boolean;
     description: string;
     liveLocation: {
         searchLocation: string;

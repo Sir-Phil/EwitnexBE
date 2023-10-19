@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: Object.values(Gender)
     },
-    interest: { 
+    interests: { 
         type: [{ type: String, enum: Object.values (Category) }],
           required: false
          },

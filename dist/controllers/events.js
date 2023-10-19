@@ -71,7 +71,7 @@ const users_1 = __importDefault(require("../schema/users"));
 //     }
 // });
 const createEventInfo = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { EventTitle, eventType, category, isPublic, isPrivate, description, } = req.body;
+    const { EventTitle, eventType, category, isPublic, description, } = req.body;
     try {
         // Create the event and associate it with the logged-in user
         const createEventInfo = yield event_1.default.create({
@@ -80,7 +80,6 @@ const createEventInfo = (0, express_async_handler_1.default)((req, res, next) =>
             OrganizedBy: req.user._id,
             category,
             isPublic,
-            isPrivate,
             description
         });
         // Verify if the user exists

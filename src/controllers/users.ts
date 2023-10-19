@@ -11,7 +11,7 @@ import { isValidEmail, isValidPhoneNumber, isValidUsername } from '../validators
 
 const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
-    const { firstName, lastName, email, phoneNumber, password, gender, city, interest, providedUsername } = req.body;
+    const { firstName, lastName, email, phoneNumber, password, gender, city, interests, providedUsername } = req.body;
 
     // Check if the provided email already exists in the database
     const existingUserByEmail = await User.findOne({ email });
@@ -33,15 +33,6 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       return;
     }
 
-    // Validate password
-    // if (password !== confirmPassword) {
-    //   res.status(400).json({
-    //     success: false,
-    //     error: 'Passwords do not match',
-    //   });
-    //   return;
-    // }
-
     // Validate gender
     if (![Gender.Male, Gender.Female, Gender.PreferredNotToSay].includes(gender)) {
       res.status(400).json({
@@ -52,22 +43,26 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
     }
 
     let username = providedUsername; // Use provided username if available
+    let suggestedUsernames: string[] =[];
 
     if (!username) {
       // If a username is not provided, generate a suggested username
-      username = generateSuggestedUsername(firstName, lastName);
+     suggestedUsernames = generateSuggestedUsername(firstName, lastName, 3);
 
       // Check if the generated username already exists in the database
-      let isUsernameTaken = true;
-      while (isUsernameTaken) {
-        const existingUserByUsername = await User.findOne({ username });
-        if (!existingUserByUsername) {
-          // Username is not taken, break the loop
-          isUsernameTaken = false;
-        } else {
-          // Generate a new username and check again
-          username = generateSuggestedUsername(firstName, lastName);
+      for (const suggestedUsername of suggestedUsernames){
+        const existingUserByUsername = await User.findOne({username: suggestedUsername});
+        if(!existingUserByUsername) {
+          username = suggestedUsername
+          break;
         }
+      }
+      if (!username) {
+        res.status(400).json({
+          success: false,
+          error: 'All suggested usernames are already taken. Please provide a custom username.',
+        });
+        return;
       }
     }
 
@@ -80,7 +75,7 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       password,
       gender,
       username,
-      interest,
+      interests,
     });
 
     // Save the user
@@ -104,6 +99,7 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
       data: {
         message: 'User created successfully',
         user: newUser,
+        suggestedUsernames,
       },
     });
   } catch (error) {
@@ -115,14 +111,9 @@ const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: 
   }
 });
 
-
-
-
-
 // @Desc Get log-in user
 // @Route /api/users/login-user
 // @Method GET
-
 
 const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
   try {
@@ -292,14 +283,7 @@ const UpdateUserPassword = asyncHandler (async(req: IUserRequest, res: Response,
       });
       
       }
-  
-      if(req.body.newPassword !== req.body.confirmPassword){
-        res.status(400).json({
-          success: false,
-          error: "Password doesn't match with each other!",
-      });
-        
-      }
+
       user!.password = req.body.newPassword;
   
       await user?.save();
@@ -341,34 +325,34 @@ const getUserDetails = asyncHandler(async(req: Request, res: Response, _next: Ne
 // @Desc delete User for ---- 
 // @Route /api/users/delete-users/:id
 // @Method DELETE
-//@access Admin
-const deleteUser = asyncHandler(async(req:Request, res:Response, next: NextFunction) => {
+//@access User
+const deleteUser = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   try {
-      const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id);
 
-      if(!user){
-        res.status(400).json({
-          success: false,
-          error: "User is not available with this Id",
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: "User is not available with this Id",
       });
-      }
-  
+    } else {
       await User.findByIdAndDelete(req.params.id);
-  
-      res.status(201).json({
-          success: true,
-          message: "User deleted successfully!",
+
+      res.status(200).json({
+        success: true,
+        message: "User deleted successfully!",
       });
+    }
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message || "Internal Server Error"    
-  });
+      error: error.message || "Internal Server Error",
+    });
   }
-})
+});
 
 
-  
+
 
 export {
   createUser,
@@ -378,5 +362,5 @@ export {
   updateUserInfo,
   UpdateUserPassword,
   getUserDetails,
-  deleteUser
+  deleteUser,
 };

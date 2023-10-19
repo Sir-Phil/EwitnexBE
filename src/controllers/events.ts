@@ -73,7 +73,6 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
         eventType,
         category,
         isPublic,
-        isPrivate,
         description,
     } = req.body;
 
@@ -85,7 +84,6 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
             OrganizedBy: req.user._id, // Associate the event with the logged-in user
             category,
             isPublic,
-            isPrivate,
             description
         });
 

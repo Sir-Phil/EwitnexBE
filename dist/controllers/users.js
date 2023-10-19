@@ -20,295 +20,9 @@ const jwtToken_1 = __importDefault(require("../utils/jwtToken"));
 const generateusername_1 = __importDefault(require("../utils/generateusername"));
 const genderOption_1 = __importDefault(require("../interface/genderOption"));
 const userValidator_1 = require("../validators/userValidator");
-// const createUserStep1 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//   try {
-//     const { firstName, lastName } = req.body;
-//     // Create a new user with first name and last name
-//     const newUser = new User({
-//       firstName,
-//       lastName,
-//     });
-//     const createdUser = await newUser.save();
-//     res.status(201).json({
-//       success: true,
-//       data: {
-//         message: 'Step 1 completed. Proceed to the next step.',
-//         //user: createdUser
-//         userId: createdUser._id,
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Error creating user' + (error as Error).message,
-//     });
-//   }
-// });
-// const confirmEmailStep2 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//   try {
-//     const userId = req.params.userId;
-//     const { email } = req.body;
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       res.status(404).json({
-//         success: false,
-//         error: 'User not found',
-//       });
-//     }
-//     // Check if the provided email already exists in the database
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser && existingUser._id.toString() !== userId) {
-//       res.status(400).json({
-//         success: false,
-//         error: 'Email already exists',
-//       });
-//     }
-//     // Update user's email
-//     if(user){
-//       user.email = email;
-//       await user.save();
-//     res.status(200).json({
-//       success: true,
-//       data: {
-//         message: `Using ${user.email} Sign Up. Proceed to the next step.`,
-//         user,
-//       },
-//     });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Error confirming email',
-//     });
-//   }
-// });
-// const continueSignupStep3 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//   try {
-//     const { phoneNumber, password, confirmPassword } = req.body;
-//     const userId = req.params.userId;
-//     // Find the user by ID
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       res.status(404).json({
-//         success: false,
-//         error: 'User not found',
-//       });
-//     }
-//     // Validate phoneNumber
-//     if (!phoneNumber) {
-//       res.status(400).json({
-//         success: false,
-//         error: 'Phone number is required',
-//       });
-//     }
-//     // Check if the phoneNumber already exists for another user
-//     const existingUserWithPhoneNumber = await User.findOne({ phoneNumber });
-//     if (existingUserWithPhoneNumber && existingUserWithPhoneNumber._id.toString() !== userId) {
-//       res.status(400).json({
-//         success: false,
-//         error: 'Phone number is already in use by another user',
-//       });
-//     }
-//     // Validate password
-//     if (password !== confirmPassword) {
-//       res.status(400).json({
-//         success: false,
-//         error: 'Passwords do not match',
-//       });
-//     }
-//     // Update user information
-//     if (user) {
-//       user.phoneNumber = phoneNumber;
-//       user.password = password;
-//       await user.save();
-//     }
-//     res.status(200).json({
-//       success: true,
-//       data: {
-//         message: 'Step 3 completed. Proceed to the next step.',
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Error step 3',
-//     });
-//   }
-// });
-// // Controller for Step 3: Choose Gender
-// const chooseGenderStep4 = asyncHandler (async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//     try {
-//       const { gender } = req.body;
-//       const userId = req.params.userId;
-//       // Find the user by ID
-//       const user = await User.findById(userId);
-//       if (!user) {
-//          res.status(404).json({
-//           success: false,
-//           error: 'User not found',
-//         });
-//       }
-//      // Validate and update user gender
-//     if (!gender || ![Gender.Male, Gender.Female, Gender.PreferredNotToSay].includes(gender)) {
-//       res.status(400).json({
-//         success: false,
-//         error: 'Invalid gender selection',
-//       });
-//     }
-//     if(user){
-//         user.gender = gender;
-//     await user.save();
-//     }
-//       res.status(200).json({
-//         success: true,
-//         data: {
-//           message: 'Step 4 completed. Proceed to the next step.',
-//         },
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({
-//         success: false,
-//         error: 'Error in Step 4',
-//       });
-//     }
-// });
-// // Controller for Step 5: Provide City Location
-// const provideCityLocationStep5 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//   try {
-//     const { city } = req.body;
-//     const userId = req.params.userId;
-//     const user = await User.findById(userId);
-//     if (!user) {
-//      res.status(404).json({
-//         success: false,
-//         error: 'User not found',
-//       });
-//     }
-//     if (!city) {
-//        res.status(400).json({
-//         success: false,
-//         error: 'City is required',
-//       });
-//     }
-//     const { latitude, longitude } = await searchCityLocation(city);
-//     if (user) {
-//       user.city = {
-//         city,
-//         latitude,
-//         longitude,
-//       };
-//       await user.save();
-//       res.status(200).json({
-//         success: true,
-//         data: {
-//           message: 'Step 5 completed. Proceed to the next step.',
-//           user,
-//         },
-//       });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Error in Step 5',
-//     });
-//   }
-// });
-// const provideUsernameStep6 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//   try {
-//     const { username } = req.body;
-//     const userId = req.params.userId;
-//     // Find the user by ID
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       res.status(404).json({
-//         success: false,
-//         error: 'User not found',
-//       });
-//     }
-//     // Validate and update user username
-//     if (!username) {
-//       const existingUserWithUsername = await User.findOne({ username });
-//       if (existingUserWithUsername) {
-//         res.status(409).json({
-//           success: false,
-//           error: 'Username is already in use',
-//         });
-//       }
-//       // If username is not provided, suggest a new username based on first name and last name
-//       const suggestedUsername = generateSuggestedUsername(user!.firstName, user!.lastName);
-//       user!.username = suggestedUsername;
-//     } else {
-//       // If username is provided, check if it's already in use
-//       const existingUserWithUsername = await User.findOne({ username });
-//       if (existingUserWithUsername) {
-//        res.status(409).json({
-//           success: false,
-//           error: 'Username is already in use',
-//         });
-//       }
-//       user!.username = username;
-//     }
-//     await user!.save();
-//     res.status(200).json({
-//       success: true,
-//       data: {
-//         message: 'Step 6 completed. Proceed to the next step.',
-//         user,
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       error: 'Error in Step 6',
-//     });
-//   }
-// });
-// const selectEventTypesStep7 = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//     try {
-//       const { eventTypes } = req.body;
-//       const userId = req.params.userId;
-//       // Find the user by ID
-//       const user = await User.findById(userId);
-//       if (!user) {
-//         res.status(404).json({
-//           success: false,
-//           error: 'User not found',
-//         });
-//       }
-//       // Validate and update user event types
-//       if (!eventTypes || !Array.isArray(eventTypes) || eventTypes.length === 0) {
-//         res.status(400).json({
-//           success: false,
-//           error: 'Please select at least one event type',
-//         });
-//       }
-//       if (user) {
-//         user.eventType = eventTypes;
-//         await user.save();
-//       }
-//       res.status(200).json({
-//         success: true,
-//         data: {
-//           message: 'Signup process is now complete. Thanks',
-//         },
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({
-//         success: false,
-//         error: 'Error in Step 7',
-//       });
-//     }
-// });
 const createUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { firstName, lastName, email, phoneNumber, password, gender, city, interest, providedUsername } = req.body;
+        const { firstName, lastName, email, phoneNumber, password, gender, city, interests, providedUsername } = req.body;
         // Check if the provided email already exists in the database
         const existingUserByEmail = yield users_1.default.findOne({ email });
         if (existingUserByEmail) {
@@ -327,14 +41,6 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             });
             return;
         }
-        // Validate password
-        // if (password !== confirmPassword) {
-        //   res.status(400).json({
-        //     success: false,
-        //     error: 'Passwords do not match',
-        //   });
-        //   return;
-        // }
         // Validate gender
         if (![genderOption_1.default.Male, genderOption_1.default.Female, genderOption_1.default.PreferredNotToSay].includes(gender)) {
             res.status(400).json({
@@ -344,21 +50,24 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             return;
         }
         let username = providedUsername; // Use provided username if available
+        let suggestedUsernames = [];
         if (!username) {
             // If a username is not provided, generate a suggested username
-            username = (0, generateusername_1.default)(firstName, lastName);
+            suggestedUsernames = (0, generateusername_1.default)(firstName, lastName, 3);
             // Check if the generated username already exists in the database
-            let isUsernameTaken = true;
-            while (isUsernameTaken) {
-                const existingUserByUsername = yield users_1.default.findOne({ username });
+            for (const suggestedUsername of suggestedUsernames) {
+                const existingUserByUsername = yield users_1.default.findOne({ username: suggestedUsername });
                 if (!existingUserByUsername) {
-                    // Username is not taken, break the loop
-                    isUsernameTaken = false;
+                    username = suggestedUsername;
+                    break;
                 }
-                else {
-                    // Generate a new username and check again
-                    username = (0, generateusername_1.default)(firstName, lastName);
-                }
+            }
+            if (!username) {
+                res.status(400).json({
+                    success: false,
+                    error: 'All suggested usernames are already taken. Please provide a custom username.',
+                });
+                return;
             }
         }
         // Create a new user
@@ -370,7 +79,7 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             password,
             gender,
             username,
-            interest,
+            interests,
         });
         // Save the user
         yield newUser.save();
@@ -389,6 +98,7 @@ const createUser = (0, express_async_handler_1.default)((req, res, _next) => __a
             data: {
                 message: 'User created successfully',
                 user: newUser,
+                suggestedUsernames,
             },
         });
     }
@@ -404,43 +114,6 @@ exports.createUser = createUser;
 // @Desc Get log-in user
 // @Route /api/users/login-user
 // @Method GET
-// const loginUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
-//     try {
-//       const { identifier, password } = req.body;
-//       // Find the user by either email, username, or phoneNumber
-//       const user = await User.findOne({
-//         $or: [
-//           { email: identifier },
-//           { username: identifier },
-//           { phoneNumber: isNaN(identifier) ? undefined : identifier },
-//         ],
-//       }).select("+password"); 
-//       if (!user) {
-//         console.log('User not found');
-//         res.status(401).json({
-//           success: false,
-//           error: 'Invalid email, username, or password',
-//         });
-//       }
-//       console.log('Stored Hashed Password:', user?.password);
-//       const isPasswordMatch = await user?.comparePassword(password);
-//       if (!isPasswordMatch) {
-//         console.log('Authentication Failed');
-//         res.status(401).json({
-//           success: false,
-//           error: 'Invalid email, username, or password',
-//         });
-//       }
-//       // Password match, send the token
-//       sendToken(user, 201, res);
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({
-//         success: false,
-//         error: 'Error logging in',
-//       });
-//     }
-// });
 const loginUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { identifier, password } = req.body;
@@ -590,12 +263,6 @@ const UpdateUserPassword = (0, express_async_handler_1.default)((req, res, _next
                 error: "Old password is incorrect!",
             });
         }
-        if (req.body.newPassword !== req.body.confirmPassword) {
-            res.status(400).json({
-                success: false,
-                error: "Password doesn't match with each other!",
-            });
-        }
         user.password = req.body.newPassword;
         yield (user === null || user === void 0 ? void 0 : user.save());
         res.status(200).json({
@@ -634,26 +301,28 @@ exports.getUserDetails = getUserDetails;
 // @Desc delete User for ---- 
 // @Route /api/users/delete-users/:id
 // @Method DELETE
-//@access Admin
-const deleteUser = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+//@access User
+const deleteUser = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield users_1.default.findById(req.params.id);
         if (!user) {
-            res.status(400).json({
+            res.status(404).json({
                 success: false,
                 error: "User is not available with this Id",
             });
         }
-        yield users_1.default.findByIdAndDelete(req.params.id);
-        res.status(201).json({
-            success: true,
-            message: "User deleted successfully!",
-        });
+        else {
+            yield users_1.default.findByIdAndDelete(req.params.id);
+            res.status(200).json({
+                success: true,
+                message: "User deleted successfully!",
+            });
+        }
     }
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message || "Internal Server Error"
+            error: error.message || "Internal Server Error",
         });
     }
 }));

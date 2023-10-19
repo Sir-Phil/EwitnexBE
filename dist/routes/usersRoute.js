@@ -14,5 +14,5 @@ router.get("/logout", users_1.logOutUser);
 router.get("/user-details/:id", users_1.getUserDetails);
 router.put("/update-user", auth_1.isAuthenticated, users_1.updateUserInfo);
 router.put("/update-user-password", auth_1.isAuthenticated, users_1.UpdateUserPassword);
-router.delete("/delete-user/:id", users_1.deleteUser);
+router.delete("/delete-user/:id", auth_1.isAuthenticated, users_1.deleteUser);
 exports.default = router;

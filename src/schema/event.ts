@@ -29,10 +29,6 @@ const eventSchema = new mongoose.Schema ({
         type: Boolean,
         default: false,
     },
-    isPrivate: {
-        type: Boolean,
-        default: false
-    },
     description: {
         type: String,
         required: false,
