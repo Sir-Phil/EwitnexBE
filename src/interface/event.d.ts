@@ -6,26 +6,24 @@ import { hostNameOption } from "./host";
 import { performerRoleOption } from "./performerRole";
 import { IEventPerformer } from "./eventPerformer";
 import { ITicket } from "./ticketing";
+  
 
 export interface IEvent extends mongoose.Document {
     EventTitle: string;
     OrganizedBy: mongoose.Types.ObjectId | IUser;
-    EventType: typeof eventTypeOptions;
+    interests: typeof eventTypeOptions;
     category: typeof Category;
     isPublic: boolean;
     description: string;
-    liveLocation: {
-        searchLocation: string;
-        enterLocation: string;
-        startedDate: Date;
-        endDate: Date;
-    },
-    onlineLocation: {
-        selectHost: typeof hostNameOption;
-        hostUrl: string;
-        startDate: Date;
-        endDate: Date;
-    }
+    location: {
+        type: 'live' | 'online';
+        searchLocation?: string;
+        enterLocation?: string;
+        startDate?: Date;
+        endDate?: Date;
+        selectHost?: typeof hostNameOption;
+        hostUrl?: string;
+      },
     performer: IEventPerformer;
     tickets: ITicket[];
 }

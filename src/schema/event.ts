@@ -15,7 +15,7 @@ const eventSchema = new mongoose.Schema ({
         type: Schema.Types.ObjectId,
         required: [false, "Please provide Organizer"]
     },
-    eventType:{
+    interests:{
         type:String,
         enum: Object.values(eventTypeOptions),
         required: [false, "Please select event Type"]
@@ -41,35 +41,31 @@ const eventSchema = new mongoose.Schema ({
         type: String,
         required: false,
     },
-    liveLocation: {
+    location: {
+        type: {
+          type: String,
+          enum: ['live', 'online'],
+        },
         searchLocation: {
             type: String,
-        },
-        enterLocation: {
-            type: String
-        },
-        startedDate: {
-            type: Date,
-        },
-        endDate: {
-            type: Date,
-        }
-    },
-    onlineLocation: {
-        selectHost: {
+          },
+          enterLocation: {
             type: String,
-            enum: Object.values(hostNameOption)
+          },
+          startDate: {
+            type: Date,
+          },
+          endDate: {
+            type: Date,
+          },
+        selectHost:{
+            type: String,
+            enum: Object.values(hostNameOption),
         },
         hostUrl: {
             type: String,
-        },
-        startDate:{
-            type: Date
-        },
-        endDate: {
-            type: Date
         }
-    },
+    },    
     performer: {
         type: performerSchema
     },
