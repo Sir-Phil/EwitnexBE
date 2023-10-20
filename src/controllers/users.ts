@@ -7,6 +7,7 @@ import { IUserRequest } from '../interface/users';
 import generateSuggestedUsername from '../utils/generateusername';
 import Gender from '../interface/genderOption';
 import { isValidEmail, isValidPhoneNumber, isValidUsername } from '../validators/userValidator';
+import mongoose from 'mongoose';
 
 
 const createUser = asyncHandler(async (req: IUserRequest, res: Response, _next: NextFunction) => {
@@ -221,48 +222,50 @@ const logOutUser = asyncHandler (async ( _req: Request, res: Response, _next: Ne
 // @Desc Update profile
 // @Route /api/users/update
 // @Method PUT
-const updateUserInfo = asyncHandler(async(req: Request, res: Response, _next: NextFunction) => {
+const updateUserInfo = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   try {
-      const {email, password, phoneNumber, firstName, lastName} = req.body;
-  
-      const user = await User.findOne({email}).select("+password");
-  
-      if(!user){
-        res.status(400).json({
-          success: false,
-          error: "User not found",
+    const { email, username, gender, phoneNumber, firstName, lastName } = req.body;
+    const userId = req.params.userId; // Assuming you have the user ID in the request params.
+
+    // Find the user by ID
+    const user = await User.findById(userId).select("+email +password");
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: "User not found",
       });
-      return;
-      }
-  
-      const isPasswordValid = await user.comparePassword(password);
-  
-      if(!isPasswordValid){
-        res.status(400).json({
-          success: false,
-          error: "please provide the correct information",
+    }
+
+    if (email !== user?.email) {
+      res.status(400).json({
+        success: false,
+        error: "Changing email during update is not allowed",
       });
-      return;
-      }
-  
+    }
+
+    if(user){
       user.firstName = firstName;
-      user.email = email;
       user.phoneNumber = phoneNumber;
       user.lastName = lastName;
-  
+      user.gender = gender;
+      user.username = username;
+
       await user.save();
-  
-      res.status(201).json({
-          success: true,
-          user,
-      })
+
+    }
+    
+    res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      error: error.message || "Internal Server Error"    
-  });
+      error: error.message || "Internal Server Error",
+    });
   }
-})
+});
 
 // @Desc Update User password
 // @Route /api/users/update-user-password
@@ -345,13 +348,11 @@ const deleteUser = asyncHandler(async (req: Request, res: Response, _next: NextF
     }
   } catch (error: any) {
     res.status(500).json({
-      success: false,
-      error: error.message || "Internal Server Error",
-    });
-  }
-});
-
-
+        success: false,
+        error: error.message || "Internal Server Error",
+      });
+    }
+  });
 
 
 export {

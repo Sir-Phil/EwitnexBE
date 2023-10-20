@@ -215,29 +215,31 @@ exports.logOutUser = logOutUser;
 // @Method PUT
 const updateUserInfo = (0, express_async_handler_1.default)((req, res, _next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, password, phoneNumber, firstName, lastName } = req.body;
-        const user = yield users_1.default.findOne({ email }).select("+password");
+        const { email, username, gender, phoneNumber, firstName, lastName } = req.body;
+        const userId = req.params.userId; // Assuming you have the user ID in the request params.
+        // Find the user by ID
+        const user = yield users_1.default.findById(userId).select("+email +password");
         if (!user) {
-            res.status(400).json({
+            res.status(404).json({
                 success: false,
                 error: "User not found",
             });
-            return;
         }
-        const isPasswordValid = yield user.comparePassword(password);
-        if (!isPasswordValid) {
+        if (email !== (user === null || user === void 0 ? void 0 : user.email)) {
             res.status(400).json({
                 success: false,
-                error: "please provide the correct information",
+                error: "Changing email during update is not allowed",
             });
-            return;
         }
-        user.firstName = firstName;
-        user.email = email;
-        user.phoneNumber = phoneNumber;
-        user.lastName = lastName;
-        yield user.save();
-        res.status(201).json({
+        if (user) {
+            user.firstName = firstName;
+            user.phoneNumber = phoneNumber;
+            user.lastName = lastName;
+            user.gender = gender;
+            user.username = username;
+            yield user.save();
+        }
+        res.status(200).json({
             success: true,
             user,
         });
@@ -245,7 +247,7 @@ const updateUserInfo = (0, express_async_handler_1.default)((req, res, _next) =>
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message || "Internal Server Error"
+            error: error.message || "Internal Server Error",
         });
     }
 }));

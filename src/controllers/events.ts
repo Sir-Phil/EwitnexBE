@@ -3,74 +3,13 @@ import Event from "../schema/event";
 import { IUserRequest } from "../interface/users";
 import { NextFunction, Request, Response } from "express";
 import User from "../schema/users";
+import { IEvent } from "../interface/event";
 
-
-// const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
-//     const {
-//         EventTitle,
-//         eventType,
-//         category,
-//         isPublic,
-//         isPrivate,
-//         description,
-//         organizerUserId, // The ID of the user to be set as an organizer
-//     } = req.body;
-
-//     try {
-//         // Verify if the logged-in user exists
-//         const loggedInUser = await User.findById(req.user._id);
-
-//         if (!loggedInUser) {
-//             res.status(404).json({
-//                 success: false,
-//                 message: "User not found",
-//             });
-//         }
-
-//         // Check if the logged-in user has organizer privileges
-//         if (!loggedInUser?.isEventOrganizer) {
-//             res.status(403).json({
-//                 success: false,
-//                 message: "You don't have organizer privileges",
-//             });
-//         }
-
-//         // Verify if the user to be set as an organizer exists
-//         const userToSetAsOrganizer = await User.findById(organizerUserId);
-
-//         if (!userToSetAsOrganizer) {
-//             res.status(404).json({
-//                 success: false,
-//                 message: "User to set as an organizer not found",
-//             });
-//         }
-
-//         // Create the event and associate it with the specified user
-//         const createEventInfo = await Event.create({
-//             EventTitle,
-//             eventType,
-//             OrganizedBy: organizerUserId, // Associate the event with the specified user
-//             category,
-//             isPublic,
-//             isPrivate,
-//             description,
-//         });
-
-//         res.status(201).json({
-//             success: true,
-//             message: "Event Information created successfully",
-//             data: createEventInfo,
-//             eventId: createEventInfo._id,
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// });
 
 const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
     const {
         EventTitle,
-        eventType,
+        interests,
         category,
         isPublic,
         description,
@@ -80,7 +19,7 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
         // Create the event and associate it with the logged-in user
         const createEventInfo = await Event.create({
             EventTitle,
-            eventType,
+            interests,
             OrganizedBy: req.user._id, // Associate the event with the logged-in user
             category,
             isPublic,
@@ -97,9 +36,11 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
             });
         }
 
+        const privacyMessage = isPublic ? 'public' : 'private';
+
         res.status(201).json({
             success: true,
-            message: "Event Information created successfully",
+            message: `Event Information created successfully. This event is ${privacyMessage}.`,
             data: createEventInfo,
             eventId: createEventInfo._id
         });
@@ -146,26 +87,56 @@ const eventProgramCover = async (req: Request, res: Response, next: NextFunction
 
 
 const eventLocation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const {liveLocation, onlineLocation} = req.body;
-        const eventId = req.params.eventId;
+  try {
+    const { location } = req.body;
+    const eventId = req.params.eventId;
 
-        const updateEventInfo = await Event.findByIdAndUpdate(
-            eventId,
-            {liveLocation, onlineLocation},
-            {new: true}
-        );
-
-        res.status(200).json({
-            success: true,
-            message: "Event location updated successfully",
-            data: updateEventInfo,
-        })
-    } catch (error) {
-        next(error);
+    if (!location || !location.type) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid location data",
+      });
+      return;
     }
+
+    const updateObject: Partial<IEvent> = {}; // Define a structured type for the updateObject
+
+    if (location.type === 'live') {
+      updateObject.location = {
+        type: 'live',
+        searchLocation: location.searchLocation,
+        enterLocation: location.enterLocation,
+        startDate: location.startDate,
+        endDate: location.endDate,
+      };
+    } else if (location.type === 'online') {
+      updateObject.location = {
+        type: 'online',
+        selectHost: location.selectHost,
+        hostUrl: location.hostUrl,
+        startDate: location.startDate,
+        endDate: location.endDate,
+      };
+    }
+
+    const updateEventInfo = await Event.findByIdAndUpdate(
+      eventId,
+      updateObject,
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Event location updated successfully",
+      data: updateEventInfo,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
-    
+
+
+
 
 const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
