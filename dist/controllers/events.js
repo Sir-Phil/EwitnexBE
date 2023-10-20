@@ -16,67 +16,13 @@ exports.deleteTicket = exports.updateTicket = exports.deletePerformer = exports.
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const event_1 = __importDefault(require("../schema/event"));
 const users_1 = __importDefault(require("../schema/users"));
-// const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
-//     const {
-//         EventTitle,
-//         eventType,
-//         category,
-//         isPublic,
-//         isPrivate,
-//         description,
-//         organizerUserId, // The ID of the user to be set as an organizer
-//     } = req.body;
-//     try {
-//         // Verify if the logged-in user exists
-//         const loggedInUser = await User.findById(req.user._id);
-//         if (!loggedInUser) {
-//             res.status(404).json({
-//                 success: false,
-//                 message: "User not found",
-//             });
-//         }
-//         // Check if the logged-in user has organizer privileges
-//         if (!loggedInUser?.isEventOrganizer) {
-//             res.status(403).json({
-//                 success: false,
-//                 message: "You don't have organizer privileges",
-//             });
-//         }
-//         // Verify if the user to be set as an organizer exists
-//         const userToSetAsOrganizer = await User.findById(organizerUserId);
-//         if (!userToSetAsOrganizer) {
-//             res.status(404).json({
-//                 success: false,
-//                 message: "User to set as an organizer not found",
-//             });
-//         }
-//         // Create the event and associate it with the specified user
-//         const createEventInfo = await Event.create({
-//             EventTitle,
-//             eventType,
-//             OrganizedBy: organizerUserId, // Associate the event with the specified user
-//             category,
-//             isPublic,
-//             isPrivate,
-//             description,
-//         });
-//         res.status(201).json({
-//             success: true,
-//             message: "Event Information created successfully",
-//             data: createEventInfo,
-//             eventId: createEventInfo._id,
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// });
 const createEventInfo = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { EventTitle, eventType, category, isPublic, description, } = req.body;
+    const { EventTitle, interests, category, isPublic, description, } = req.body;
     try {
         // Create the event and associate it with the logged-in user
         const createEventInfo = yield event_1.default.create({
             EventTitle,
-            eventType,
+            interests,
             OrganizedBy: req.user._id,
             category,
             isPublic,
@@ -90,9 +36,10 @@ const createEventInfo = (0, express_async_handler_1.default)((req, res, next) =>
                 message: "User not found",
             });
         }
+        const privacyMessage = isPublic ? 'public' : 'private';
         res.status(201).json({
             success: true,
-            message: "Event Information created successfully",
+            message: `Event Information created successfully. This event is ${privacyMessage}.`,
             data: createEventInfo,
             eventId: createEventInfo._id
         });
@@ -129,9 +76,35 @@ const eventProgramCover = (req, res, next) => __awaiter(void 0, void 0, void 0, 
 exports.eventProgramCover = eventProgramCover;
 const eventLocation = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { liveLocation, onlineLocation } = req.body;
+        const { location } = req.body;
         const eventId = req.params.eventId;
-        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, { liveLocation, onlineLocation }, { new: true });
+        if (!location || !location.type) {
+            res.status(400).json({
+                success: false,
+                message: "Invalid location data",
+            });
+            return;
+        }
+        const updateObject = {}; // Define a structured type for the updateObject
+        if (location.type === 'live') {
+            updateObject.location = {
+                type: 'live',
+                searchLocation: location.searchLocation,
+                enterLocation: location.enterLocation,
+                startDate: location.startDate,
+                endDate: location.endDate,
+            };
+        }
+        else if (location.type === 'online') {
+            updateObject.location = {
+                type: 'online',
+                selectHost: location.selectHost,
+                hostUrl: location.hostUrl,
+                startDate: location.startDate,
+                endDate: location.endDate,
+            };
+        }
+        const updateEventInfo = yield event_1.default.findByIdAndUpdate(eventId, updateObject, { new: true });
         res.status(200).json({
             success: true,
             message: "Event location updated successfully",

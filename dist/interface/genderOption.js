@@ -4,6 +4,6 @@ var Gender;
 (function (Gender) {
     Gender["Male"] = "Male";
     Gender["Female"] = "Female";
-    Gender["PreferredNotToSay"] = "PreferredNotToSay";
+    Gender["PreferredNotToSay"] = "Preferred Not To Say";
 })(Gender || (Gender = {}));
 exports.default = Gender;
