@@ -19,6 +19,8 @@ export interface IUser extends mongoose.Document {
     phoneNumber: number;
     address: string;
     location: string;
+    verificationCode: string | number | undefined;
+    codeExpiration: Date | undefined;
     city: {
         city: string;
         latitude: number;
@@ -29,6 +31,7 @@ export interface IUser extends mongoose.Document {
     isEventOrganizer: boolean;
     createdAt: Date;
     updatedAt: Date;
+    verificationCodeExpiry: Date | undefined;
     resetPasswordToken?: string;
     resetPasswordTime?: Date;
     comparePassword(enteredPassword: string): Promise<Boolean>;

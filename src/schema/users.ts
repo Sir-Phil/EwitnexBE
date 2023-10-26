@@ -42,7 +42,9 @@ const userSchema = new mongoose.Schema({
     phoneNumber: {
         type: Number
     },
-
+    verificationCode:{
+        type: Number
+    },
     isAdmin: {
         type: Boolean,
         default: false,
@@ -73,6 +75,8 @@ const userSchema = new mongoose.Schema({
         unique: true
 
       },
+    codeExpiration: Date,
+    verificationCodeExpiry: Date,  
     resetPasswordToken: String,
     resetPasswordTime: Date,
 },
