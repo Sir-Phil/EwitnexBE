@@ -4,6 +4,7 @@ import { IUserRequest } from "../interface/users";
 import { NextFunction, Request, Response } from "express";
 import User from "../schema/users";
 import { IEvent } from "../interface/event";
+import { generateCustomEventCode } from "../utils/geneateEventcode";
 
 
 const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -16,6 +17,7 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
     } = req.body;
 
     try {
+      const eventCode = generateCustomEventCode(category);
         // Create the event and associate it with the logged-in user
         const createEventInfo = await Event.create({
             EventTitle,
@@ -23,6 +25,7 @@ const createEventInfo = asyncHandler(async (req: IUserRequest, res: Response, ne
             OrganizedBy: req.user._id, // Associate the event with the logged-in user
             category,
             isPublic,
+            eventCode,
             description
         });
 
