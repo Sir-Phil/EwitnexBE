@@ -6,7 +6,7 @@ import { performerSchema } from "../interface/eventPerformer";
 import { ticketSchema } from "../interface/ticketing";
 import { IEvent } from "../interface/event";
 
-const eventSchema = new mongoose.Schema ({
+const eventSchema: Schema<IEvent> = new mongoose.Schema ({
     EventTitle: {
         type: String,
         required: false,
@@ -40,6 +40,10 @@ const eventSchema = new mongoose.Schema ({
     coverImage: {
         type: String,
         required: false,
+    },
+    eventCode: {
+        type: String,
+        unique: true
     },
     location: {
         type: {

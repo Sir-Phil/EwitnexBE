@@ -14,7 +14,10 @@ export interface IEvent extends mongoose.Document {
     interests: typeof eventTypeOptions;
     category: typeof Category;
     isPublic: boolean;
+    eventCode: string;
     description: string;
+    filePDF: string;
+    coverImage: string;
     location: {
         type: 'live' | 'online';
         searchLocation?: string;
@@ -26,6 +29,8 @@ export interface IEvent extends mongoose.Document {
       },
     performer: IEventPerformer;
     tickets: ITicket[];
+    createdAt: Date;
+    updatedAt: Date
 }
 
 export interface Request {
