@@ -1,6 +1,6 @@
 
 import express from "express";
-import { createEventInfo, deleteEvent, deletePerformer, deleteTicket, eventLocation, eventPerformerInfo, eventProgramCover, eventTicket, getAllEventsByTypes, getEventDetails, updateEvents, updatePerformerImage, updateTicket } from "../controllers/events";
+import { createEventInfo, deleteEvent, deletePerformer, deleteTicket, eventLocation, eventPerformerInfo, eventProgramCover, eventTicket, getAllEventsByTypes, getEventDetails, updateEvents, updateTicket } from "../controllers/events";
 import upload from "../utils/multer";
 import { isAuthenticated } from "../middleware/auth";
 
@@ -23,7 +23,7 @@ router.get("/details/:eventId", getEventDetails);
 
 //Updates Events 
 router.put("/update-event/:eventId", updateEvents);
-router.put("/:eventId/performers/:performerId/update-image", upload.single('performerImage'), updatePerformerImage);
+// router.put("/:eventId/performers/:performerId/update-image", upload.single('performerImage'), updatePerformerImage);
 router.put("/:eventId/tickets/:ticketId", updateTicket);
 
 //Deletion route

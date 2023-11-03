@@ -1,19 +1,17 @@
 import mongoose, { Schema } from "mongoose";
 import { performerRoleOption } from "./performerRole";
 
-interface IEventPerformer extends mongoose.Document{
-    isPerformer: boolean;
+
+
+export interface IEventPerformer extends mongoose.Document{
     nameOfPerformer: string;
     performerTitle: string;
-    performerRole: typeof performerRoleOption;
+    performerRole: string;
     aboutPerformer: string;
     performerImage: string;
 }
 
 export const performerSchema = new Schema<IEventPerformer>({
-    isPerformer:{
-        type: Boolean,
-    },
     nameOfPerformer: {
         type: String,
     },
@@ -22,7 +20,7 @@ export const performerSchema = new Schema<IEventPerformer>({
     },
     performerRole: {
         type: String,
-        enum: Object.values(performerRoleOption)
+        enum: Object.values(performerRoleOption).map(String),
     },
     aboutPerformer:{
         type: String,

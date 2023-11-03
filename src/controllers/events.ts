@@ -139,64 +139,54 @@ const eventLocation = asyncHandler(async (req: Request, res: Response, next: Nex
 });
 
 
-
-
 const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { performer } = req.body;
-  
-      console.log("receiving data", performer);
-  
-      const uploadedFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
-  
-      // Get the performerImage file from the uploaded files
-      const performerImage = uploadedFiles['performerImage'] ? uploadedFiles['performerImage'][0] : undefined;
-  
-      if (!performer || (typeof performer !== 'object' && typeof performer !== 'string')) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid performing artist data",
-        });
-        return;
-      }
-  
-      let modifiedPerformer: any = typeof performer === 'string' ? JSON.parse(performer) : performer;
-  
-      // If performerImage is defined in the request, attach it to the performer object
+  try {
+    const { performers } = req.body;
+    const eventId = req.params.eventId;
+
+    const parsedPerformers = JSON.parse(performers);
+    const uploadedFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    const updatedPerformers = parsedPerformers.map((performer: any, i: number) => {
+      const performerImageField = `performerImage${i}`;
+      const performerImage = uploadedFiles[performerImageField] ? uploadedFiles[performerImageField][0] : undefined;
+
       if (performerImage) {
-        if (typeof modifiedPerformer === 'object') {
-          modifiedPerformer.performerImage = '/' + performerImage.path.replace(/\\/g, '/'); // Add a leading slash and replace backslashes with forward slashes
-          const performerImageUrl = `/uploads/performerImage/${performerImage.filename}`;
-          modifiedPerformer.performerImageUrl = performerImageUrl; // Store the URL in the object
-        } else {
-          res.status(400).json({
-            success: false,
-            message: "Invalid performing artist data",
-          });
-          return;
-        }
+        const performerImageUrl = performerImage ? `/uploads/performerImages/${performerImage.filename}` : undefined;
+        // Directly attach performerImage to the performer object
+        performer.performerImage = performerImageUrl;
       }
-  
-      const eventId = req.params.eventId;
-  
-      // Update the event with the modified performer object
-      const updateEventInfo = await Event.findByIdAndUpdate(
-        eventId,
-        { performer: modifiedPerformer },
-        { new: true }
-      );
-  
-      res.status(200).json({
-        success: true,
-        message: "Event Performer updated successfully",
-        data: updateEventInfo,
+
+      return performer;
+    });
+
+    const updateEventData = { performers: updatedPerformers }; // New event data to update
+
+    const updateEventInfo: IEvent | null = await Event.findByIdAndUpdate(
+      eventId,
+      updateEventData,
+      { new: true }
+    );
+
+    if (!updateEventInfo) {
+      res.status(404).json({
+        success: false,
+        message: 'Event not found',
       });
-    } catch (error) {
-      next(error);
     }
-  });
-  
-  
+
+    res.status(200).json({
+      success: true,
+      message: 'Event performers updated successfully',
+      data: updateEventInfo,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 
 const eventTicket = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -341,68 +331,70 @@ const deleteEvent = asyncHandler(async (req: Request, res: Response, next: NextF
     }
 });
 
-const updatePerformerImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const eventId = req.params.eventId;
-      const performerId = req.params.performerId; // Assuming you're passing the performerId as a parameter
-  
-      // Check if the event exists
-      const event = await Event.findById(eventId);
-      if (!event) {
-        res.status(404).json({
-          success: false,
-          message: "Event not found",
-        });
-      }
-  
-      // Find the performer within the event
-      const performer = event!.performer;
-  
-      // Check if the performer exists
-      if (!performer) {
-         res.status(404).json({
-          success: false,
-          message: "Performer not found in the event",
-        });
-      }
-  
-      // Update the performer's fields
-      if (req.body.isPerformer !== undefined) {
-        performer.isPerformer = req.body.isPerformer;
-      }
-  
-      if (req.body.nameOfPerformer) {
-        performer.nameOfPerformer = req.body.nameOfPerformer;
-      }
-  
-      if (req.body.performerTitle) {
-        performer.performerTitle = req.body.performerTitle;
-      }
-  
-      if (req.body.performerRole) {
-        performer.performerRole = req.body.performerRole;
-      }
-  
-      if (req.body.aboutPerformer) {
-        performer.aboutPerformer = req.body.aboutPerformer;
-      }
-  
-      if (req.file) {
-        performer.performerImage = '/' + req.file.path.replace(/\\/g, '/');
-      }
-  
-      // Save the event with the updated performer
-      const updatedEvent = await event!.save();
-  
-      res.status(200).json({
-        success: true,
-        message: "Performer updated successfully",
-        data: updatedEvent,
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
+// const updatePerformerImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const eventId = req.params.eventId;
+//     const performerId = req.params.performerId;
+
+//     // Check if the event exists
+//     const event = await Event.findById(eventId);
+
+//     if (!event) {
+//       res.status(404).json({
+//         success: false,
+//         message: "Event not found",
+//       });
+//     }
+
+//     // Find the performer within the event
+//     const performer = event?.performers.id(performerId);
+
+//     if (!performer) {
+//       res.status(404).json({
+//         success: false,
+//         message: "Performer not found in the event",
+//       });
+//     }
+
+//     // Update the performer's fields
+//     if (req.body.isPerformer !== undefined) {
+//       performer.isPerformer = req.body.isPerformer;
+//     }
+
+//     if (req.body.nameOfPerformer) {
+//       performer.nameOfPerformer = req.body.nameOfPerformer;
+//     }
+
+//     if (req.body.performerTitle) {
+//       performer.performerTitle = req.body.performerTitle;
+//     }
+
+//     if (req.body.performerRole) {
+//       performer.performerRole = req.body.performerRole;
+//     }
+
+//     if (req.body.aboutPerformer) {
+//       performer.aboutPerformer = req.body.aboutPerformer;
+//     }
+
+//     if (req.file) {
+//       performer.performerImage = '/' + req.file.path.replace(/\\/g, '/');
+//     }
+
+//     // Save the event with the updated performer
+//     const updatedEvent = await event?.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Performer updated successfully",
+//       data: updatedEvent,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+
   
 
   const deletePerformer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -504,7 +496,7 @@ export {
     getEventDetails,
     updateEvents,
     deleteEvent,
-    updatePerformerImage,
+    // updatePerformerImage,
     deletePerformer,
     updateTicket,
     deleteTicket

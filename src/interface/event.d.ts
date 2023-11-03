@@ -27,7 +27,7 @@ export interface IEvent extends mongoose.Document {
         selectHost?: typeof hostNameOption;
         hostUrl?: string;
       },
-    performer: IEventPerformer;
+    performers: IEventPerformer[];
     tickets: ITicket[];
     createdAt: Date;
     updatedAt: Date

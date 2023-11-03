@@ -47,7 +47,7 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'filePDF') {
       cb(null, 'uploads/pdfFiles/');
     } else if (file.fieldname === 'performerImage'){
-      cb(null, 'uploads/performerImage/');
+      cb(null, 'uploads/performerImages/');
     }
   },
   // filename: (req, file, cb) => {
@@ -61,7 +61,7 @@ const storage = multer.diskStorage({
 });
 
 
-const uploadDirectories = ['uploads/coverImages', 'uploads/pdfFiles', 'uploads/performerImage'];
+const uploadDirectories = ['uploads/coverImages', 'uploads/pdfFiles', 'uploads/performerImages'];
 uploadDirectories.forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
