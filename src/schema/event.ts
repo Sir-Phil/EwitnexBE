@@ -70,9 +70,7 @@ const eventSchema: Schema<IEvent> = new mongoose.Schema ({
             type: String,
         }
     },    
-    performer: {
-        type: performerSchema
-    },
+    performers:[performerSchema],
     tickets: [ticketSchema],
 
     createdAt: {

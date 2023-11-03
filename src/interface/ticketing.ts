@@ -4,18 +4,18 @@ import { ticketHandlerOptions } from "./ticketHandler";
 import { refundHandleOption } from "./refundHandler";
 
 interface ITicket extends mongoose.Document{
-    ticketType: typeof ticketTypeOptions;
+    ticketType: string;
     ticketName: string;
     ticketPrice: number;
     ticketQty: number;
-    ticketHandle: typeof ticketHandlerOptions;
-    ticketRefund: typeof refundHandleOption;
+    ticketHandle: string;
+    ticketRefund: string;
 }
 
 export const ticketSchema = new Schema<ITicket>({
     ticketType: {
         type: String,
-        enum: Object.values(ticketTypeOptions)
+        enum: Object.values(ticketTypeOptions).map(String),
     },
     ticketName: {
         type: String,
@@ -28,10 +28,10 @@ export const ticketSchema = new Schema<ITicket>({
     },
     ticketHandle: {
         type: String,
-        enum: Object.values(ticketHandlerOptions)
+        enum: Object.values(ticketHandlerOptions).map(String),
     },
     ticketRefund: {
         type:String,
-        enum: Object.values(refundHandleOption)
+        enum: Object.values(refundHandleOption).map(String),
     }
 })
