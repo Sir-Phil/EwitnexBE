@@ -64,6 +64,10 @@ const eventSchema = new mongoose_1.default.Schema({
         type: String,
         required: false,
     },
+    eventCode: {
+        type: String,
+        unique: true
+    },
     location: {
         type: {
             type: String,
@@ -89,9 +93,7 @@ const eventSchema = new mongoose_1.default.Schema({
             type: String,
         }
     },
-    performer: {
-        type: eventPerformer_1.performerSchema
-    },
+    performers: [eventPerformer_1.performerSchema],
     tickets: [ticketing_1.ticketSchema],
     createdAt: {
         type: Date,

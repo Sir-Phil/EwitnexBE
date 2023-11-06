@@ -14,17 +14,17 @@ router.post("/:eventId/update-cover-program", multer_1.default.fields([
     { name: 'filePDF', maxCount: 1 },
 ]), events_1.eventProgramCover);
 router.post("/:eventId/event-location", events_1.eventLocation);
-router.post("/:eventId/event-performer", multer_1.default.fields([{ name: 'performerImage', maxCount: 1 }]), events_1.eventPerformerInfo);
-router.post("/:eventId/event-ticket", events_1.eventTicket);
+router.post("/:eventId/event-performer", auth_1.isAuthenticated, multer_1.default.fields([{ name: 'performerImage', maxCount: 1 }]), events_1.eventPerformerInfo);
+router.post("/:eventId/event-ticket", auth_1.isAuthenticated, events_1.eventTicket);
 // getAll activities 
 router.get("/", events_1.getAllEventsByTypes);
 router.get("/details/:eventId", events_1.getEventDetails);
 //Updates Events 
-router.put("/update-event/:eventId", events_1.updateEvents);
-router.put("/:eventId/performers/:performerId/update-image", multer_1.default.single('performerImage'), events_1.updatePerformerImage);
-router.put("/:eventId/tickets/:ticketId", events_1.updateTicket);
+router.put("/update-event/:eventId", auth_1.isAuthenticated, events_1.updateEvents);
+router.put("/:eventId/performers/:performerId/performer", auth_1.isAuthenticated, multer_1.default.single('performerImage'), events_1.updateEventPerformerInfo);
+router.put("/:eventId/tickets/:ticketId", auth_1.isAuthenticated, events_1.updateEventTicket);
 //Deletion route
-router.delete("/delete-event/:eventId", events_1.deleteEvent);
-router.delete("/:eventId/delete-performers", events_1.deletePerformer);
-router.delete("/:eventId/tickets/:ticketId", events_1.deleteTicket);
+router.delete("/delete-event/:eventId", auth_1.isAuthenticated, events_1.deleteEvent);
+router.delete("/:eventId/performers/:performerId/delete-performer", auth_1.isAuthenticated, events_1.deleteEventPerformerInfo);
+router.delete("/:eventId/tickets/:ticketId", auth_1.isAuthenticated, events_1.deleteEventTicket);
 exports.default = router;

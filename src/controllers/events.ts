@@ -141,26 +141,23 @@ const eventLocation = asyncHandler(async (req: Request, res: Response, next: Nex
 
 const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { performers } = req.body;
+    const { newPerformers } = req.body;
     const eventId = req.params.eventId;
 
-    const parsedPerformers = JSON.parse(performers);
+    const parsedNewPerformers: any[] = JSON.parse(newPerformers);
     const uploadedFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    const updatedPerformers = parsedPerformers.map((performer: any, i: number) => {
-      const performerImageField = `performerImage${i}`;
-      const performerImage = uploadedFiles[performerImageField] ? uploadedFiles[performerImageField][0] : undefined;
+    const performerKeys = Object.keys(uploadedFiles).filter(key => key.startsWith('performerImage'));
 
-      if (performerImage) {
-        const performerImageUrl = performerImage ? `/uploads/performerImages/${performerImage.filename}` : undefined;
-        // Directly attach performerImage to the performer object
-        performer.performerImage = performerImageUrl;
-      }
-
-      return performer;
+    const updatedPerformers = parsedNewPerformers.map((newPerformer, index) => {
+      const performerImage = uploadedFiles[performerKeys[index]] ? uploadedFiles[performerKeys[index]][0] : null;
+      const performerImageUrl = performerImage ? `/uploads/performerImages/${performerImage.filename}` : null;
+      return { ...newPerformer, performerImage: performerImageUrl };
     });
 
-    const updateEventData = { performers: updatedPerformers }; // New event data to update
+    const updateEventData = {
+      $push: { performers: { $each: updatedPerformers } }
+    };
 
     const updateEventInfo: IEvent | null = await Event.findByIdAndUpdate(
       eventId,
@@ -177,7 +174,7 @@ const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next
 
     res.status(200).json({
       success: true,
-      message: 'Event performers updated successfully',
+      message: 'New performers added successfully to the event',
       data: updateEventInfo,
     });
 
@@ -187,38 +184,43 @@ const eventPerformerInfo = asyncHandler(async (req: Request, res: Response, next
 });
 
 
+const eventTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { tickets } = req.body;
+    const eventId = req.params.eventId;
 
-const eventTicket = asyncHandler (async (req: Request, res: Response, next: NextFunction) => {
-    try {
-
-        const {tickets} = req.body;
-        const eventId = req.params.eventId;
-
-        // Ensure that 'tickets' in the request body is an array
-        if (!Array.isArray(tickets)) {
-            res.status(400).json({
-            success: false,
-            error: "Invalid ticket information provided",
-            });
-        }
-
-
-        
-        const updateEventInfo = await Event.findByIdAndUpdate(
-            eventId,
-            { $set: {tickets } },
-            { new: true }
-          );
-        
-        res.status(200).json({
-            success: true,
-            message: "Event ticket updated successfully",
-            data: updateEventInfo
-        });
-    } catch (error) {
-        next(error);
+    // Ensure that 'tickets' in the request body is an array
+    if (!Array.isArray(tickets)) {
+      res.status(400).json({
+        success: false,
+        error: "Invalid ticket information provided",
+      });
     }
+
+    const updateEventInfo = await Event.findByIdAndUpdate(
+      eventId,
+      { $push: { tickets: { $each: tickets } } }, // Using $push and $each to add multiple tickets
+      { new: true }
+    );
+
+    if (!updateEventInfo) {
+      res.status(404).json({
+        success: false,
+        error: "Event not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Event tickets updated successfully",
+      data: updateEventInfo,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
+
+
 
 const getAllEventsByTypes = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
     try {
@@ -331,158 +333,151 @@ const deleteEvent = asyncHandler(async (req: Request, res: Response, next: NextF
     }
 });
 
-// const updatePerformerImage = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const eventId = req.params.eventId;
-//     const performerId = req.params.performerId;
-
-//     // Check if the event exists
-//     const event = await Event.findById(eventId);
-
-//     if (!event) {
-//       res.status(404).json({
-//         success: false,
-//         message: "Event not found",
-//       });
-//     }
-
-//     // Find the performer within the event
-//     const performer = event?.performers.id(performerId);
-
-//     if (!performer) {
-//       res.status(404).json({
-//         success: false,
-//         message: "Performer not found in the event",
-//       });
-//     }
-
-//     // Update the performer's fields
-//     if (req.body.isPerformer !== undefined) {
-//       performer.isPerformer = req.body.isPerformer;
-//     }
-
-//     if (req.body.nameOfPerformer) {
-//       performer.nameOfPerformer = req.body.nameOfPerformer;
-//     }
-
-//     if (req.body.performerTitle) {
-//       performer.performerTitle = req.body.performerTitle;
-//     }
-
-//     if (req.body.performerRole) {
-//       performer.performerRole = req.body.performerRole;
-//     }
-
-//     if (req.body.aboutPerformer) {
-//       performer.aboutPerformer = req.body.aboutPerformer;
-//     }
-
-//     if (req.file) {
-//       performer.performerImage = '/' + req.file.path.replace(/\\/g, '/');
-//     }
-
-//     // Save the event with the updated performer
-//     const updatedEvent = await event?.save();
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Performer updated successfully",
-//       data: updatedEvent,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-
   
-
-  const deletePerformer = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const updateEventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const performerId = req.params.performerId;
       const eventId = req.params.eventId;
   
-      const event = await Event.findOneAndUpdate(
+      const uploadedFile = req.file as Express.Multer.File;
+      const updatedPerformerData = req.body; // Contains updated performer details
+  
+      const performerImage = uploadedFile ? `/uploads/performerImages/${uploadedFile.filename}` : null;
+  
+      const updateEventData = {
+        $set: {
+          "performers.$[elem].performerImage": performerImage,
+          "performers.$[elem].nameOfPerformer": updatedPerformerData.nameOfPerformer,
+          "performers.$[elem].performerTitle": updatedPerformerData.performerTitle,
+          "performers.$[elem}.performerRole": updatedPerformerData.performerRole,
+          "performers.$[elem].aboutPerformer": updatedPerformerData.aboutPerformer,
+        }
+      };
+  
+      const options = {
+        arrayFilters: [{ "elem._id": performerId }],
+        new: true
+      };
+  
+      const updateEventInfo: IEvent | null = await Event.findOneAndUpdate(
         { _id: eventId },
-        { performer: {} }, // Set performer to an empty object
-        { new: true }
+        updateEventData,
+        options
       );
   
-      console.log("Updated Event Data:", event);
-  
-      if (!event) {
+      if (!updateEventInfo) {
         res.status(404).json({
           success: false,
-          message: "Event not found",
+          message: 'Event or performer not found',
         });
-        return;
       }
   
       res.status(200).json({
         success: true,
-        message: "Performer deleted successfully",
-        data: event,
+        message: 'Performer and image updated successfully for the event',
+        data: updateEventInfo,
+      });
+  
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+
+
+  const deleteEventPerformerInfo = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const performerId = req.params.performerId;
+      const eventId = req.params.eventId;
+  
+      const updateEventData = {
+        $pull: { performers: { _id: performerId } }
+      };
+  
+      const updateEventInfo: IEvent | null = await Event.findOneAndUpdate(
+        { _id: eventId },
+        updateEventData,
+        { new: true }
+      );
+  
+      if (!updateEventInfo) {
+        res.status(404).json({
+          success: false,
+          message: 'Event or performer not found',
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Performer and associated image deleted successfully from the event',
+        data: updateEventInfo,
+      });
+  
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  
+
+
+  const updateEventTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { ticketId, updatedTicket } = req.body;
+      const eventId = req.params.eventId;
+  
+      const updateEventInfo = await Event.findOneAndUpdate(
+        { _id: eventId, 'tickets._id': ticketId }, // Match event and specific ticket to update
+        { $set: { 'tickets.$': updatedTicket } }, // Update the matched ticket
+        { new: true }
+      );
+  
+      if (!updateEventInfo) {
+        res.status(404).json({
+          success: false,
+          error: "Event or ticket not found",
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Event ticket updated successfully",
+        data: updateEventInfo,
       });
     } catch (error) {
       next(error);
     }
   });
-    
-const updateTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  
+
+  const deleteEventTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const eventId = req.params.eventId;
-        const ticketId = req.params.ticketId; // Assuming you're passing the ticket's _id as a parameter
-        const { ticket } = req.body;
-
-        const updateEventInfo = await Event.findOneAndUpdate(
-            { _id: eventId, 'ticket._id': ticketId }, // Find the event with the given ID and matching ticket _id
-            { $set: { 'ticket.$': ticket } }, // Update the matched ticket with the new ticket data
-            { new: true }
-        );
-
-        if (!updateEventInfo) {
-            res.status(404).json({
-                success: false,
-                message: "Event or ticket not found",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Ticket updated successfully",
-            data: updateEventInfo,
+      const { ticketId } = req.body;
+      const eventId = req.params.eventId;
+  
+      const updateEventInfo = await Event.findOneAndUpdate(
+        { _id: eventId },
+        { $pull: { tickets: { _id: ticketId } } }, // Remove the specific ticket from the tickets array
+        { new: true }
+      );
+  
+      if (!updateEventInfo) {
+        res.status(404).json({
+          success: false,
+          error: "Event or ticket not found",
         });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Event ticket deleted successfully",
+        data: updateEventInfo,
+      });
     } catch (error) {
-        next(error);
+      next(error);
     }
-});
-
-const deleteTicket = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const eventId = req.params.eventId;
-        const ticketId = req.params.ticketId; // Assuming you're passing the ticket's _id as a parameter
-
-        const updateEventInfo = await Event.findByIdAndUpdate(
-            eventId,
-            { $pull: { ticket: { _id: ticketId } } }, // Remove the ticket with the specified _id
-            { new: true }
-        );
-
-        if (!updateEventInfo) {
-            res.status(404).json({
-                success: false,
-                message: "Event not found",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Ticket deleted successfully",
-            data: updateEventInfo,
-        });
-    } catch (error) {
-        next(error);
-    }
-});
+  });
+  
 
 
 
@@ -496,9 +491,9 @@ export {
     getEventDetails,
     updateEvents,
     deleteEvent,
-    // updatePerformerImage,
-    deletePerformer,
-    updateTicket,
-    deleteTicket
+    updateEventPerformerInfo,
+    deleteEventPerformerInfo,
+    updateEventTicket,
+    deleteEventTicket
 }
 
