@@ -4,9 +4,6 @@ exports.performerSchema = void 0;
 const mongoose_1 = require("mongoose");
 const performerRole_1 = require("./performerRole");
 exports.performerSchema = new mongoose_1.Schema({
-    isPerformer: {
-        type: Boolean,
-    },
     nameOfPerformer: {
         type: String,
     },
@@ -15,7 +12,7 @@ exports.performerSchema = new mongoose_1.Schema({
     },
     performerRole: {
         type: String,
-        enum: Object.values(performerRole_1.performerRoleOption)
+        enum: Object.values(performerRole_1.performerRoleOption).map(String),
     },
     aboutPerformer: {
         type: String,

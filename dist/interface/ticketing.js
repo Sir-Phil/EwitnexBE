@@ -8,7 +8,7 @@ const refundHandler_1 = require("./refundHandler");
 exports.ticketSchema = new mongoose_1.Schema({
     ticketType: {
         type: String,
-        enum: Object.values(ticketSelect_1.ticketTypeOptions)
+        enum: Object.values(ticketSelect_1.ticketTypeOptions).map(String),
     },
     ticketName: {
         type: String,
@@ -21,10 +21,10 @@ exports.ticketSchema = new mongoose_1.Schema({
     },
     ticketHandle: {
         type: String,
-        enum: Object.values(ticketHandler_1.ticketHandlerOptions)
+        enum: Object.values(ticketHandler_1.ticketHandlerOptions).map(String),
     },
     ticketRefund: {
         type: String,
-        enum: Object.values(refundHandler_1.refundHandleOption)
+        enum: Object.values(refundHandler_1.refundHandleOption).map(String),
     }
 });
